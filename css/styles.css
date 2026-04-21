@@ -1,0 +1,108 @@
+:root {
+  color-scheme: light;
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: #f2f5f9;
+  color: #0e1f2f;
+}
+
+.page-header,
+.page-footer {
+  text-align: center;
+  padding: 1rem;
+  background: #102a43;
+  color: #fff;
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1rem;
+  padding: 1rem;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.card {
+  background: #fff;
+  border-radius: 10px;
+  padding: 1rem;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+}
+
+h2 {
+  margin-top: 0;
+  font-size: 1rem;
+  color: #16324f;
+}
+
+form {
+  display: grid;
+  gap: 0.8rem;
+}
+
+label {
+  display: grid;
+  gap: 0.4rem;
+  font-size: 0.9rem;
+}
+
+input,
+select,
+button {
+  padding: 0.65rem;
+  border-radius: 8px;
+  border: 1px solid #b5c4d4;
+}
+
+button {
+  cursor: pointer;
+  background: #1366d6;
+  color: white;
+  border: none;
+  font-weight: 600;
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.secondary {
+  background: #6b7c93;
+}
+
+.payment-row {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.payment-btn.active {
+  background: #0b8f47;
+}
+
+.output {
+  background: #f8fbff;
+  border: 1px solid #d5e1ed;
+  border-radius: 8px;
+  padding: 0.75rem;
+  min-height: 80px;
+  overflow-x: auto;
+}
+
+.muted {
+  color: #496480;
+  font-size: 0.9rem;
+}
+
+.hidden {
+  display: none;
+}

@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>TariroClinincs | Mobile Collection</title>
+    <link rel="stylesheet" href="./css/styles.css" />
+  </head>
+  <body>
+    <header class="page-header">
+      <h1>TariroClinincs</h1>
+      <p>Mobile Collection Web System</p>
+    </header>
+
+    <main class="layout">
+      <section class="card">
+        <h2>Authentication (Officer / Admin)</h2>
+        <form id="login-form">
+          <label>
+            Email
+            <input id="login-email" type="email" required placeholder="officer@tariroclinincs.com" />
+          </label>
+          <label>
+            Password
+            <input id="login-password" type="password" required placeholder="Enter password" />
+          </label>
+          <button type="submit">Login</button>
+        </form>
+        <button id="logout-btn" class="secondary hidden">Logout</button>
+        <p id="auth-status" class="muted">Not logged in.</p>
+      </section>
+
+      <section class="card">
+        <h2>1) Customer Information Entry</h2>
+        <form id="customer-form">
+          <label>
+            Customer ID
+            <input id="customer-id" required placeholder="CUST001" />
+          </label>
+          <label>
+            Full Name
+            <input id="customer-name" required placeholder="John Doe" />
+          </label>
+          <label>
+            Account / Patient Number
+            <input id="account-number" required placeholder="PAT-10022" />
+          </label>
+          <label>
+            Service
+            <select id="service" required>
+              <option value="">Select service</option>
+              <option value="Clinic Fee">Clinic Fee</option>
+              <option value="Consultation">Consultation</option>
+              <option value="Bill Payment">Bill Payment</option>
+            </select>
+          </label>
+          <label>
+            Amount Due (optional override)
+            <input id="amount-due" type="number" step="0.01" min="0" placeholder="25.00" />
+          </label>
+          <button type="submit">Generate Bill</button>
+        </form>
+      </section>
+
+      <section class="card">
+        <h2>2) Bill Details</h2>
+        <div id="bill-output" class="output"></div>
+
+        <h2>3) Payment Selection</h2>
+        <div class="payment-row">
+          <button data-method="EcoCash" class="payment-btn">EcoCash</button>
+          <button data-method="Card" class="payment-btn">Card</button>
+          <button data-method="Cash" class="payment-btn">Cash</button>
+        </div>
+        <p id="selected-method" class="muted">No payment method selected.</p>
+
+        <h2>4) Payment Processing</h2>
+        <button id="process-payment" disabled>Process Payment</button>
+      </section>
+
+      <section class="card">
+        <h2>5) Receipt</h2>
+        <pre id="receipt-output" class="output"></pre>
+
+        <h2>6) Real-Time Sync</h2>
+        <p class="muted">Transactions are inserted into Supabase table `transactions`.</p>
+
+        <div id="admin-panel" class="hidden">
+          <h2>7) Admin Dashboard</h2>
+          <button id="refresh-dashboard">Refresh Revenue</button>
+          <div id="dashboard-output" class="output"></div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="page-footer">
+      <p>Deploy on GitHub Pages. Configure Supabase keys in <code>js/config.js</code>.</p>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script type="module" src="./js/app.js"></script>
+  </body>
+</html>
