@@ -1,5 +1,5 @@
-export const SUPABASE_URL = "https://YOUR_PROJECT.supabase.co";
-export const SUPABASE_ANON_KEY = "YOUR_SUPABASE_ANON_KEY";
+export const SUPABASE_URL = "https://ocojsigqagaehlebubdw.supabase.co";
+export const SUPABASE_ANON_KEY = "sb_publishable_njwmRaZK-bnzut7bZPDpNQ_0VolCv-C";
 
 export const API_PLACEHOLDERS = {
   ecocashEndpoint: "PASTE_ECOCASH_API_ENDPOINT",
