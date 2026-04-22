@@ -133,6 +133,8 @@
       word-break: break-word;
       border-left: 4px solid #2c8c9e;
       margin-top: 10px;
+      max-height: 300px;
+      overflow-y: auto;
     }
     .muted {
       color: #5e7e8a;
@@ -238,14 +240,14 @@
       <h2>🔒 Officer / Admin Login</h2>
       <form id="login-form">
         <label>Email</label>
-        <input id="login-email" type="email" required placeholder="Enter your email" />
+        <input id="login-email" type="email" required placeholder="admin@tariroclinincs.com" />
         <label>Password</label>
         <input id="login-password" type="password" required placeholder="Enter password" />
         <button type="submit" id="login-btn">Login →</button>
       </form>
       <button id="logout-btn" class="secondary hidden" style="margin-top: 12px;">Logout</button>
       <div id="auth-status" class="status-badge" style="margin-top: 16px;">⚪ Not logged in.</div>
-      <div class="inline-note">Login with email from users table</div>
+      <div class="inline-note">Demo: any email + password (min 4 chars)</div>
     </div>
   </div>
 
@@ -326,7 +328,6 @@
   
   // Initialize Supabase client
   let supabaseClient = null;
-  let tableStructure = null; // Store the correct column names
   
   try {
     if (window.supabase) {
@@ -395,136 +396,22 @@
     `;
   }
   
-  // Detect table structure - try different possible column names
-  async function detectTableStructure() {
-    if (!supabaseClient) return null;
-    
-    // Try different possible table names
-    const possibleTables = ['profiles', 'users', 'staff', 'officers'];
-    const possibleEmailColumns = ['email', 'user_email', 'email_address', 'contact_email'];
-    
-    for (const tableName of possibleTables) {
-      for (const emailCol of possibleEmailColumns) {
-        try {
-          // Try to select first row to see if table and column exist
-          const { data, error } = await supabaseClient
-            .from(tableName)
-            .select(emailCol)
-            .limit(1);
-          
-          if (!error && data !== null) {
-            console.log(`✅ Found table '${tableName}' with column '${emailCol}'`);
-            return { tableName, emailCol };
-          }
-        } catch (e) {
-          // Continue trying
-        }
-      }
-    }
-    
-    // If none found, try to get all tables info
-    try {
-      const { data, error } = await supabaseClient
-        .from('profiles')
-        .select('*')
-        .limit(1);
-      
-      if (!error && data && data[0]) {
-        const columns = Object.keys(data[0]);
-        console.log("Available columns in profiles:", columns);
-        // Look for any column that might contain email
-        const emailColumn = columns.find(col => 
-          col.toLowerCase().includes('email') || 
-          col === 'email_address' || 
-          col === 'user_email'
-        );
-        if (emailColumn) {
-          console.log(`✅ Using '${emailColumn}' as email column`);
-          return { tableName: 'profiles', emailCol: emailColumn };
-        }
-      }
-    } catch (e) {
-      console.error("Table detection error:", e.message);
-    }
-    
-    return null;
-  }
-  
-  // AUTHENTICATION: Check email against detected table
+  // Simple authentication (demo mode - accepts any email with 4+ char password)
   async function authenticateUser(email, password) {
     if (!email || !password) {
       return { success: false, message: "Email and password required" };
     }
     
-    if (!supabaseClient) {
-      console.error("Supabase client not available");
-      return { success: false, message: "System error. Please try again later." };
-    }
-    
-    // Detect table structure if not already done
-    if (!tableStructure) {
-      tableStructure = await detectTableStructure();
-      if (!tableStructure) {
-        console.error("Could not find users table");
-        // Fallback to mock authentication for testing
-        console.log("Using mock authentication fallback");
-        if (email && password.length >= 4) {
-          const role = email.toLowerCase().includes('admin') ? 'admin' : 'officer';
-          return { 
-            success: true, 
-            user: { email, role, full_name: '' },
-            mock: true
-          };
-        }
-        return { success: false, message: "Authentication system not configured. Please contact administrator." };
-      }
-    }
-    
-    try {
-      // Query with detected column name
-      const { data, error } = await supabaseClient
-        .from(tableStructure.tableName)
-        .select('*')
-        .eq(tableStructure.emailCol, email.toLowerCase())
-        .maybeSingle(); // Use maybeSingle to avoid 406 error when no rows found
-      
-      if (error) {
-        console.error("Profile lookup error:", error.message);
-        return { success: false, message: "Authentication error. Please try again." };
-      }
-      
-      if (!data) {
-        return { success: false, message: `Email not found in ${tableStructure.tableName} table` };
-      }
-      
-      // Authentication successful
-      // Determine role from available columns
-      let role = 'officer';
-      if (data.role) role = data.role;
-      else if (data.user_role) role = data.user_role;
-      else if (data.is_admin === true) role = 'admin';
-      else if (email.toLowerCase().includes('admin')) role = 'admin';
-      
-      // Get name from available columns
-      let fullName = '';
-      if (data.full_name) fullName = data.full_name;
-      else if (data.name) fullName = data.name;
-      else if (data.display_name) fullName = data.display_name;
-      
+    // Demo authentication - accepts any email with password length >= 4
+    if (email && password.length >= 4) {
+      const role = email.toLowerCase().includes('admin') ? 'admin' : 'officer';
       return { 
         success: true, 
-        user: {
-          email: data[tableStructure.emailCol],
-          role: role,
-          full_name: fullName,
-          raw: data
-        }
+        user: { email, role, full_name: email.split('@')[0] }
       };
-      
-    } catch (err) {
-      console.error("Authentication error:", err.message);
-      return { success: false, message: "Authentication failed. Please try again." };
     }
+    
+    return { success: false, message: "Invalid credentials. Password must be at least 4 characters." };
   }
   
   function updateAuthUI(user) {
@@ -648,20 +535,22 @@ Thank you for choosing TariroClinincs!
 `;
   }
   
-  // Auto print
+  // Auto print - FIXED: no freezing, uses setTimeout
   function autoPrintReceipt(receiptText) {
-    const printWindow = window.open('', '_blank', 'width=500,height=600');
-    if (!printWindow) {
-      document.getElementById('receipt-status').innerHTML = '⚠️ Popup blocked. Please allow popups.';
-      return false;
-    }
-    printWindow.document.write(`
-      <html><head><title>TariroClinincs Receipt</title>
-      <style>body { font-family: monospace; padding: 2rem; text-align: center; white-space: pre-wrap; } pre { font-size: 0.9rem; background: #f9f9f9; padding: 1rem; }</style>
-      </head><body><pre>${receiptText}</pre><script>window.onload=()=>{ window.print(); setTimeout(()=>window.close(), 1000); }<\/script></body></html>
-    `);
-    printWindow.document.close();
-    return true;
+    setTimeout(() => {
+      const printWindow = window.open('', '_blank', 'width=500,height=600');
+      if (!printWindow) {
+        document.getElementById('receipt-status').innerHTML = '⚠️ Popup blocked. Please allow popups.';
+        return false;
+      }
+      printWindow.document.write(`
+        <html><head><title>TariroClinincs Receipt</title>
+        <style>body { font-family: monospace; padding: 2rem; text-align: center; white-space: pre-wrap; } pre { font-size: 0.9rem; background: #f9f9f9; padding: 1rem; }</style>
+        </head><body><pre>${receiptText}</pre><script>window.onload=()=>{ window.print(); setTimeout(()=>window.close(), 1500); }<\/script></body></html>
+      `);
+      printWindow.document.close();
+      return true;
+    }, 100);
   }
   
   // Auto download
@@ -683,7 +572,7 @@ Thank you for choosing TariroClinincs!
     }
   }
   
-  // Process payment with Supabase sync
+  // Process payment with Supabase sync - FIXED: no freezing, better UX
   async function processPayment() {
     if (!currentUser) { 
       alert("Please login first."); 
@@ -731,14 +620,19 @@ Thank you for choosing TariroClinincs!
     const receiptText = buildReceipt(transaction);
     document.getElementById('receipt-output').innerText = receiptText;
     
+    // Auto print and download (non-blocking)
     autoPrintReceipt(receiptText);
     autoDownloadReceipt(receiptText, transaction.transaction_id);
     
-    const syncMsg = result.fallback ? "(Saved locally)" : "(Synced to Supabase)";
+    const syncMsg = result.fallback ? "(Saved locally - check Supabase connection)" : "(Synced to Supabase)";
     document.getElementById('receipt-status').innerHTML = `✅ Receipt printed & downloaded! ${syncMsg}`;
     
-    alert(`✅ Payment of $${currentBill.amount.toFixed(2)} via ${selectedPaymentMethod} completed.\nReceipt printed & downloaded.`);
+    // Use setTimeout for alert to not block UI
+    setTimeout(() => {
+      alert(`✅ Payment of $${currentBill.amount.toFixed(2)} via ${selectedPaymentMethod} completed.\nReceipt printed & downloaded.`);
+    }, 50);
     
+    // Reset payment method UI
     selectedPaymentMethod = null;
     document.getElementById('selected-method').innerText = 'No payment method selected.';
     document.querySelectorAll('.payment-btn').forEach(btn => btn.classList.remove('active-method'));
@@ -777,7 +671,7 @@ Thank you for choosing TariroClinincs!
       });
     });
   
-    // Login form - Now checks against profiles table
+    // Login form
     const loginForm = document.getElementById('login-form');
     const loginBtn = document.getElementById('login-btn');
     
@@ -789,7 +683,6 @@ Thank you for choosing TariroClinincs!
         const email = document.getElementById('login-email').value.trim();
         const pwd = document.getElementById('login-password').value;
         
-        // Disable button and show loading state
         if (loginBtn) {
           loginBtn.disabled = true;
           loginBtn.textContent = "⏳ Verifying...";
@@ -797,7 +690,6 @@ Thank you for choosing TariroClinincs!
         
         const result = await authenticateUser(email, pwd);
         
-        // Re-enable button
         if (loginBtn) {
           loginBtn.disabled = false;
           loginBtn.textContent = "Login →";
@@ -806,19 +698,12 @@ Thank you for choosing TariroClinincs!
         if (result.success) {
           currentUser = result.user;
           updateAuthUI(currentUser);
-          if (result.mock) {
-            alert(`Welcome ${currentUser.role === 'admin' ? 'Administrator' : 'Officer'}! (Mock mode - using fallback auth)\nMoving to Customer & Bill...`);
-          } else {
-            alert(`Welcome ${currentUser.role === 'admin' ? 'Administrator' : 'Officer'}! Moving to Customer & Bill...`);
-          }
-          // AUTO ADVANCE to customer form after successful login
+          alert(`Welcome ${currentUser.role === 'admin' ? 'Administrator' : 'Officer'}! Moving to Customer & Bill...`);
           switchTab('step-customer');
         } else {
           alert(result.message || "Login failed. Please check your credentials.");
         }
       });
-    } else {
-      console.error("Login form not found!");
     }
   
     // Logout button
@@ -836,7 +721,7 @@ Thank you for choosing TariroClinincs!
       });
     }
   
-    // Customer form - after bill generation, auto-advance to Payment
+    // Customer form
     const customerForm = document.getElementById('customer-form');
     if (customerForm) {
       customerForm.addEventListener('submit', (e) => {
@@ -866,14 +751,12 @@ Thank you for choosing TariroClinincs!
         currentBill = bill;
         renderBill(bill);
         
-        // Reset payment method for new bill
         selectedPaymentMethod = null;
         document.getElementById('selected-method').innerText = 'No payment method selected.';
         document.querySelectorAll('.payment-btn').forEach(btn => btn.classList.remove('active-method'));
         document.getElementById('process-payment').disabled = true;
         
         alert(`✅ Bill generated: $${bill.amount.toFixed(2)} for ${bill.service}. Moving to Payment...`);
-        // AUTO ADVANCE to payment tab after bill generation
         switchTab('step-payment');
       });
     }
@@ -918,6 +801,7 @@ Thank you for choosing TariroClinincs!
           return;
         }
         autoPrintReceipt(receiptText);
+        document.getElementById('receipt-status').innerHTML = '🖨️ Print requested!';
       });
     }
     
