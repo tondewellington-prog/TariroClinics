@@ -51,9 +51,9 @@
       background: white;
       border-radius: 28px;
       padding: 1.6rem 1.8rem;
-      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.05);
       margin-bottom: 1.5rem;
       border: 1px solid #e2edf2;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.05);
     }
     .card h2 {
       font-size: 1.35rem;
@@ -160,10 +160,6 @@
       width: auto;
       flex: 1;
     }
-    hr {
-      margin: 1rem 0;
-      border-color: #dee9ef;
-    }
     .step-nav {
       display: flex;
       gap: 10px;
@@ -214,46 +210,9 @@
       margin-top: 12px;
       text-align: center;
     }
-    .debug-console {
-      background: #1a1a2e;
-      color: #0f0;
-      font-family: monospace;
-      font-size: 0.7rem;
-      padding: 10px;
-      border-radius: 12px;
-      margin-top: 10px;
-      max-height: 150px;
-      overflow-y: auto;
-    }
-    .fix-box {
-      background: #fff3cd;
-      border-left: 4px solid #ffc107;
-      padding: 12px;
-      margin-top: 12px;
-      border-radius: 12px;
-      font-size: 0.75rem;
-    }
-    .fix-box code {
-      background: #f8f9fa;
-      padding: 2px 6px;
-      border-radius: 6px;
-      font-family: monospace;
-      font-size: 0.7rem;
-      display: block;
-      margin: 8px 0;
-      white-space: pre-wrap;
-      word-break: break-all;
-    }
-    .copy-btn {
-      background: #1e6b78;
-      color: white;
-      border: none;
-      padding: 4px 12px;
-      border-radius: 20px;
-      font-size: 0.7rem;
-      cursor: pointer;
-      width: auto;
-      margin-top: 8px;
+    .loading {
+      opacity: 0.7;
+      pointer-events: none;
     }
     @media (max-width: 520px) {
       .card { padding: 1.2rem; }
@@ -286,11 +245,11 @@
         <input id="login-email" type="email" required placeholder="officer@tariroclinincs.com" />
         <label>Password</label>
         <input id="login-password" type="password" required placeholder="Enter password" />
-        <button type="submit">Login →</button>
+        <button type="submit" id="login-btn">Login →</button>
       </form>
       <button id="logout-btn" class="secondary hidden" style="margin-top: 12px;">Logout</button>
       <div id="auth-status" class="status-badge" style="margin-top: 16px;">⚪ Not logged in.</div>
-      <div class="inline-note">A Product Of TariroClinics</div>
+      <div class="inline-note">Login with email from profiles table</div>
     </div>
   </div>
 
@@ -312,7 +271,7 @@
           <option value="Consultation">Consultation ($45.00)</option>
           <option value="Bill Payment">Bill Payment (custom amount)</option>
         </select>
-        <label>Amount Due / Chikwereti (optional override)</label>
+        <label>Amount Due (optional override)</label>
         <input id="amount-due" type="number" step="0.01" min="0" placeholder="Leave empty for default" />
         <button type="submit">💰 Generate Bill & Continue →</button>
       </form>
@@ -352,76 +311,17 @@
     <div class="card">
       <h2>📊 Admin Dashboard</h2>
       <button id="refresh-dashboard">🔄 Refresh Revenue</button>
-      <div id="dashboard-output" class="output">Click refresh to reload</div>
-    </div>
-  </div>
-
-  <!-- FIX INSTRUCTIONS -->
-  <div class="card" id="fix-card">
-    <h2>🔧 Supabase RLS Fix Required</h2>
-    <div id="debug-console" class="debug-console">Waiting for actions...</div>
-    <div id="fix-instructions" class="fix-box">
-      <strong>⚠️ RLS Policy Blocking Inserts!</strong><br><br>
-      Copy and run this SQL in your Supabase SQL editor:<br>
-      <code id="sql-code">ALTER TABLE transactions DISABLE ROW LEVEL SECURITY;</code>
-      <button id="copy-sql-btn" class="copy-btn">📋 Copy SQL</button>
-      <br><br>
-      <strong>Or create a policy (more secure):</strong><br>
-      <code id="sql-code2">CREATE POLICY "enable_insert_for_all" ON transactions FOR INSERT WITH CHECK (true);</code>
-      <button id="copy-sql-btn2" class="copy-btn">📋 Copy SQL</button>
-      <br><br>
-      <strong>Current Status:</strong> Data is being saved to localStorage as backup.
+      <div id="dashboard-output" class="output">Click refresh to load transaction summary.</div>
     </div>
   </div>
 
   <footer>
-    <p>TariroClinincs Mobile Collection — Safest Way</p>
+    <p>TariroClinincs Mobile Collection — Secure step-by-step workflow | Receipt auto‑print & auto‑download</p>
   </footer>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
-  // Debug logging function
-  function addDebugLog(message, type = 'info') {
-    const debugDiv = document.getElementById('debug-console');
-    if (!debugDiv) return;
-    const timestamp = new Date().toLocaleTimeString();
-    const colors = {
-      info: '#0f0',
-      error: '#f00',
-      success: '#0f0',
-      warning: '#ff0'
-    };
-    const color = colors[type] || '#0f0';
-    const logEntry = `<div style="color: ${color}; border-bottom: 1px solid #333; padding: 4px 0;">[${timestamp}] ${message}</div>`;
-    debugDiv.innerHTML = logEntry + debugDiv.innerHTML;
-    if (debugDiv.children.length > 20) {
-      debugDiv.removeChild(debugDiv.lastChild);
-    }
-    console.log(`[${type.toUpperCase()}]`, message);
-  }
-  
-  addDebugLog("Page loaded, initializing...");
-  
-  // Copy SQL buttons
-  document.getElementById('copy-sql-btn')?.addEventListener('click', () => {
-    const sql = document.getElementById('sql-code')?.innerText;
-    if (sql) {
-      navigator.clipboard.writeText(sql);
-      addDebugLog("SQL copied to clipboard!", 'success');
-      alert("SQL copied! Paste it in your Supabase SQL editor.");
-    }
-  });
-  
-  document.getElementById('copy-sql-btn2')?.addEventListener('click', () => {
-    const sql = document.getElementById('sql-code2')?.innerText;
-    if (sql) {
-      navigator.clipboard.writeText(sql);
-      addDebugLog("SQL copied to clipboard!", 'success');
-      alert("SQL copied! Paste it in your Supabase SQL editor.");
-    }
-  });
-  
   // ============================================================
   // SUPABASE CONFIGURATION
   // ============================================================
@@ -430,17 +330,15 @@
   
   // Initialize Supabase client
   let supabaseClient = null;
-  let rlsErrorDetected = false;
-  
   try {
     if (window.supabase) {
       supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-      addDebugLog("✅ Supabase client initialized successfully", 'success');
+      console.log("✅ Supabase client initialized successfully");
     } else {
-      addDebugLog("❌ Supabase not loaded from CDN", 'error');
+      console.warn("⚠️ Supabase not loaded from CDN");
     }
   } catch(e) {
-    addDebugLog(`❌ Supabase init error: ${e.message}`, 'error');
+    console.error("❌ Supabase init error:", e.message);
   }
   
   // App state
@@ -499,16 +397,86 @@
     `;
   }
   
-  // Insert transaction into Supabase transactions table
-  async function insertTransactionToSupabase(transaction) {
-    addDebugLog(`Attempting to insert transaction: ${transaction.transaction_id}`, 'info');
+  // AUTHENTICATION: Check email against profiles table
+  async function authenticateUser(email, password) {
+    if (!email || !password) {
+      return { success: false, message: "Email and password required" };
+    }
     
     if (!supabaseClient) {
-      addDebugLog("❌ No Supabase client - saving to localStorage", 'error');
+      console.error("Supabase client not available");
+      return { success: false, message: "System error. Please try again later." };
+    }
+    
+    try {
+      // Query the profiles table for the email
+      const { data, error } = await supabaseClient
+        .from('profiles')
+        .select('email, role, full_name')
+        .eq('email', email.toLowerCase())
+        .single();
+      
+      if (error) {
+        console.error("Profile lookup error:", error.message);
+        if (error.code === 'PGRST116') {
+          return { success: false, message: "Email not found in profiles table" };
+        }
+        return { success: false, message: "Authentication error. Please try again." };
+      }
+      
+      if (!data) {
+        return { success: false, message: "Email not found in profiles table" };
+      }
+      
+      // For now, since we don't have password hashing, 
+      // we'll accept any non-empty password for existing emails
+      // In production, you should compare hashed passwords
+      if (password.length < 1) {
+        return { success: false, message: "Invalid password" };
+      }
+      
+      // Authentication successful
+      return { 
+        success: true, 
+        user: {
+          email: data.email,
+          role: data.role || 'officer',
+          full_name: data.full_name || ''
+        }
+      };
+      
+    } catch (err) {
+      console.error("Authentication error:", err.message);
+      return { success: false, message: "Authentication failed. Please try again." };
+    }
+  }
+  
+  function updateAuthUI(user) {
+    const statusDiv = document.getElementById('auth-status');
+    const logoutBtn = document.getElementById('logout-btn');
+    if (user) {
+      statusDiv.innerHTML = `✅ Logged in as ${user.email} (${user.role})`;
+      logoutBtn.classList.remove('hidden');
+      console.log(`User logged in: ${user.email} (${user.role})`);
+    } else {
+      statusDiv.innerHTML = `⚪ Not logged in.`;
+      logoutBtn.classList.add('hidden');
+      currentUser = null;
+      console.log("User logged out");
+    }
+  }
+  
+  // Insert transaction into Supabase transactions table
+  async function insertTransactionToSupabase(transaction) {
+    console.log(`Attempting to insert transaction: ${transaction.transaction_id}`);
+    
+    if (!supabaseClient) {
+      console.warn("No Supabase client - saving to localStorage fallback");
       let transactions = JSON.parse(localStorage.getItem('tariro_transactions') || '[]');
       const newTx = { ...transaction, id: Date.now(), created_at: new Date().toISOString() };
       transactions.push(newTx);
       localStorage.setItem('tariro_transactions', JSON.stringify(transactions));
+      console.log(`✅ Saved to localStorage fallback (total: ${transactions.length} transactions)`);
       return { success: true, data: newTx, fallback: true };
     }
     
@@ -530,29 +498,20 @@
         .select();
       
       if (error) {
-        addDebugLog(`❌ Supabase error: ${error.message}`, 'error');
-        
-        // Check for RLS error
-        if (error.message.includes('row-level security') || error.message.includes('RLS') || error.code === '42501') {
-          rlsErrorDetected = true;
-          addDebugLog(`⚠️ RLS POLICY ERROR! You need to disable RLS or add insert policy.`, 'warning');
-          document.getElementById('fix-instructions')?.classList.remove('hidden');
-          document.getElementById('fix-card')?.classList.remove('hidden');
-        }
+        console.error("❌ Supabase error:", error.message);
         throw error;
       }
       
-      addDebugLog(`✅ Successfully saved to Supabase!`, 'success');
-      document.getElementById('fix-instructions')?.classList.add('hidden');
+      console.log(`✅ Successfully saved to Supabase!`);
       return { success: true, data: data?.[0] };
     } catch (err) {
-      // Save to localStorage as fallback
-      addDebugLog(`Falling back to localStorage...`, 'warning');
+      console.error("❌ Supabase insert exception:", err.message);
+      // Fallback to localStorage
       let transactions = JSON.parse(localStorage.getItem('tariro_transactions') || '[]');
       const newTx = { ...transaction, id: Date.now(), created_at: new Date().toISOString() };
       transactions.push(newTx);
       localStorage.setItem('tariro_transactions', JSON.stringify(transactions));
-      addDebugLog(`✅ Saved to localStorage fallback (total: ${transactions.length} transactions)`, 'success');
+      console.log(`✅ Saved to localStorage fallback (total: ${transactions.length} transactions)`);
       return { success: true, data: newTx, fallback: true };
     }
   }
@@ -569,10 +528,10 @@
         .select('*')
         .eq('status', 'completed');
       if (error) throw error;
-      addDebugLog(`Fetched ${data?.length || 0} transactions from Supabase`, 'info');
+      console.log(`Fetched ${data?.length || 0} transactions from Supabase`);
       return data || [];
     } catch (err) {
-      addDebugLog(`Error fetching from Supabase: ${err.message}`, 'error');
+      console.error("Error fetching from Supabase:", err.message);
       let transactions = JSON.parse(localStorage.getItem('tariro_transactions') || '[]');
       return transactions.filter(t => t.status === 'completed');
     }
@@ -643,17 +602,27 @@ Thank you for choosing TariroClinincs!
       URL.revokeObjectURL(url);
       return true;
     } catch (err) {
-      console.warn(err);
+      console.warn("Download error:", err);
       return false;
     }
   }
   
   // Process payment with Supabase sync
   async function processPayment() {
-    addDebugLog("=== PROCESSING PAYMENT START ===", 'info');
-    if (!currentUser) { alert("Please login first."); switchTab('step-auth'); return; }
-    if (!currentBill) { alert("No active bill. Generate bill first."); switchTab('step-customer'); return; }
-    if (!selectedPaymentMethod) { alert("Please select a payment method."); return; }
+    if (!currentUser) { 
+      alert("Please login first."); 
+      switchTab('step-auth'); 
+      return; 
+    }
+    if (!currentBill) { 
+      alert("No active bill. Generate bill first."); 
+      switchTab('step-customer'); 
+      return; 
+    }
+    if (!selectedPaymentMethod) { 
+      alert("Please select a payment method."); 
+      return; 
+    }
   
     const transaction = {
       transaction_id: `TXN-${Date.now()}`,
@@ -668,8 +637,6 @@ Thank you for choosing TariroClinincs!
       timestamp: new Date().toISOString()
     };
   
-    addDebugLog(`Transaction prepared: ${transaction.transaction_id}`, 'info');
-  
     const processBtn = document.getElementById('process-payment');
     const originalText = processBtn.innerText;
     processBtn.innerText = "⏳ Processing...";
@@ -681,7 +648,6 @@ Thank you for choosing TariroClinincs!
     processBtn.disabled = false;
   
     if (!result.success) {
-      addDebugLog("❌ Transaction failed to save!", 'error');
       alert("Transaction failed. Please try again.");
       return;
     }
@@ -692,16 +658,10 @@ Thank you for choosing TariroClinincs!
     autoPrintReceipt(receiptText);
     autoDownloadReceipt(receiptText, transaction.transaction_id);
     
-    let syncMsg = "";
-    if (result.fallback) {
-      syncMsg = "⚠️ Saved to localStorage only. RLS policy blocking Supabase. Check fix instructions above.";
-    } else {
-      syncMsg = "✅ Synced to Supabase successfully!";
-    }
+    const syncMsg = result.fallback ? "(Saved locally)" : "(Synced to Supabase)";
     document.getElementById('receipt-status').innerHTML = `✅ Receipt printed & downloaded! ${syncMsg}`;
     
-    addDebugLog(`✅ Payment completed! ${syncMsg}`, 'success');
-    alert(`✅ Payment of $${currentBill.amount.toFixed(2)} via ${selectedPaymentMethod} completed.\nReceipt printed & downloaded.\n${syncMsg}`);
+    alert(`✅ Payment of $${currentBill.amount.toFixed(2)} via ${selectedPaymentMethod} completed.\nReceipt printed & downloaded.`);
     
     selectedPaymentMethod = null;
     document.getElementById('selected-method').innerText = 'No payment method selected.';
@@ -709,70 +669,79 @@ Thank you for choosing TariroClinincs!
     document.getElementById('process-payment').disabled = true;
   }
   
-  // Authentication
-  function authenticateUser(email, password) {
-    if (!email || !password || password.length < 4) return null;
-    const role = email.toLowerCase().includes('admin') ? 'admin' : 'officer';
-    return { email, role, authenticated: true };
-  }
-  
-  function updateAuthUI(user) {
-    const statusDiv = document.getElementById('auth-status');
-    const logoutBtn = document.getElementById('logout-btn');
-    if (user) {
-      statusDiv.innerHTML = `✅ Logged in as ${user.email} (${user.role})`;
-      logoutBtn.classList.remove('hidden');
-      addDebugLog(`User logged in: ${user.email} (${user.role})`, 'success');
-    } else {
-      statusDiv.innerHTML = `⚪ Not logged in.`;
-      logoutBtn.classList.add('hidden');
-      currentUser = null;
-      addDebugLog("User logged out", 'info');
-    }
-  }
-  
   // Tab switching
   function switchTab(stepId) {
-    document.querySelectorAll('.panel').forEach(panel => panel.classList.remove('active-panel'));
-    document.getElementById(stepId).classList.add('active-panel');
-    document.querySelectorAll('.step-tab').forEach(tab => {
-      if (tab.dataset.step === stepId) tab.classList.add('active');
-      else tab.classList.remove('active');
+    const panels = document.querySelectorAll('.panel');
+    const tabs = document.querySelectorAll('.step-tab');
+    
+    panels.forEach(panel => panel.classList.remove('active-panel'));
+    const activePanel = document.getElementById(stepId);
+    if (activePanel) activePanel.classList.add('active-panel');
+    
+    tabs.forEach(tab => {
+      if (tab.dataset.step === stepId) {
+        tab.classList.add('active');
+      } else {
+        tab.classList.remove('active');
+      }
     });
-    addDebugLog(`Switched to tab: ${stepId}`, 'info');
+    console.log(`Switched to tab: ${stepId}`);
   }
   
   // Event Listeners
   document.addEventListener('DOMContentLoaded', () => {
-    addDebugLog("DOM loaded, setting up event listeners", 'info');
+    console.log("DOM loaded, setting up event listeners");
     
     // Tab navigation
-    document.querySelectorAll('.step-tab').forEach(tab => {
-      tab.addEventListener('click', () => switchTab(tab.dataset.step));
+    const tabs = document.querySelectorAll('.step-tab');
+    tabs.forEach(tab => {
+      tab.addEventListener('click', (e) => {
+        const step = tab.dataset.step;
+        switchTab(step);
+      });
     });
   
-    // Login form
+    // Login form - Now checks against profiles table
     const loginForm = document.getElementById('login-form');
+    const loginBtn = document.getElementById('login-btn');
+    
     if (loginForm) {
-      loginForm.addEventListener('submit', (e) => {
+      loginForm.addEventListener('submit', async (e) => {
         e.preventDefault();
-        addDebugLog("Login form submitted", 'info');
+        console.log("Login form submitted");
+        
         const email = document.getElementById('login-email').value.trim();
         const pwd = document.getElementById('login-password').value;
-        const user = authenticateUser(email, pwd);
-        if (user) {
-          currentUser = user;
-          updateAuthUI(user);
-          alert(`Welcome ${user.role === 'admin' ? 'Administrator' : 'Officer'}! Moving to Customer & Bill...`);
+        
+        // Disable button and show loading state
+        if (loginBtn) {
+          loginBtn.disabled = true;
+          loginBtn.textContent = "⏳ Verifying...";
+        }
+        
+        const result = await authenticateUser(email, pwd);
+        
+        // Re-enable button
+        if (loginBtn) {
+          loginBtn.disabled = false;
+          loginBtn.textContent = "Login →";
+        }
+        
+        if (result.success) {
+          currentUser = result.user;
+          updateAuthUI(currentUser);
+          alert(`Welcome ${currentUser.role === 'admin' ? 'Administrator' : 'Officer'}! Moving to Customer & Bill...`);
+          // AUTO ADVANCE to customer form after successful login
           switchTab('step-customer');
         } else {
-          addDebugLog("Login failed: Invalid credentials", 'error');
-          alert("Invalid credentials. Use any email + password (min 4 chars).");
+          alert(result.message || "Login failed. Please check your credentials.");
         }
       });
+    } else {
+      console.error("Login form not found!");
     }
   
-    // Logout
+    // Logout button
     const logoutBtn = document.getElementById('logout-btn');
     if (logoutBtn) {
       logoutBtn.addEventListener('click', () => {
@@ -783,58 +752,139 @@ Thank you for choosing TariroClinincs!
         document.querySelectorAll('.payment-btn').forEach(btn => btn.classList.remove('active-method'));
         document.getElementById('process-payment').disabled = true;
         switchTab('step-auth');
-        alert("Logged out.");
+        alert("Logged out successfully.");
       });
     }
   
-    // Customer form
+    // Customer form - after bill generation, auto-advance to Payment
     const customerForm = document.getElementById('customer-form');
     if (customerForm) {
       customerForm.addEventListener('submit', (e) => {
         e.preventDefault();
-        addDebugLog("Customer form submitted", 'info');
-        if (!currentUser) { alert("Please login first."); switchTab('step-auth'); return; }
+        console.log("Customer form submitted");
+        
+        if (!currentUser) { 
+          alert("Please login first."); 
+          switchTab('step-auth'); 
+          return; 
+        }
+        
         const custId = document.getElementById('customer-id').value.trim();
         const name = document.getElementById('customer-name').value.trim();
         const accNo = document.getElementById('account-number').value.trim();
         const service = document.getElementById('service').value;
         const amountOverride = document.getElementById('amount-due').value;
-        if (!custId || !name || !accNo || !service) { alert("Please fill all required fields (*)"); return; }
+        
+        if (!custId || !name || !accNo || !service) { 
+          alert("Please fill all required fields (*)"); 
+          return; 
+        }
+        
         const bill = generateBill(custId, name, accNo, service, amountOverride);
         if (!bill) return;
+        
         currentBill = bill;
         renderBill(bill);
+        
+        // Reset payment method for new bill
         selectedPaymentMethod = null;
         document.getElementById('selected-method').innerText = 'No payment method selected.';
         document.querySelectorAll('.payment-btn').forEach(btn => btn.classList.remove('active-method'));
         document.getElementById('process-payment').disabled = true;
-        addDebugLog(`Bill generated: $${bill.amount} for ${bill.service}`, 'success');
+        
         alert(`✅ Bill generated: $${bill.amount.toFixed(2)} for ${bill.service}. Moving to Payment...`);
+        // AUTO ADVANCE to payment tab after bill generation
         switchTab('step-payment');
       });
     }
   
     // Payment method selection
-    document.querySelectorAll('.payment-btn').forEach(btn => {
+    const payBtns = document.querySelectorAll('.payment-btn');
+    payBtns.forEach(btn => {
       btn.addEventListener('click', () => {
-        if (!currentUser) { alert("Login required."); switchTab('step-auth'); return; }
-        if (!currentBill) { alert("Generate bill first."); switchTab('step-customer'); return; }
-        document.querySelectorAll('.payment-btn').forEach(b => b.classList.remove('active-method'));
+        if (!currentUser) { 
+          alert("Login required."); 
+          switchTab('step-auth'); 
+          return; 
+        }
+        if (!currentBill) { 
+          alert("Generate bill first."); 
+          switchTab('step-customer'); 
+          return; 
+        }
+        
+        payBtns.forEach(b => b.classList.remove('active-method'));
         btn.classList.add('active-method');
         selectedPaymentMethod = btn.dataset.method;
         document.getElementById('selected-method').innerHTML = `✅ Selected: <strong>${selectedPaymentMethod}</strong>`;
         document.getElementById('process-payment').disabled = false;
-        addDebugLog(`Payment method selected: ${selectedPaymentMethod}`, 'info');
+        console.log(`Payment method selected: ${selectedPaymentMethod}`);
       });
     });
   
-    // Process payment
+    // Process payment button
     const processBtn = document.getElementById('process-payment');
     if (processBtn) {
       processBtn.addEventListener('click', processPayment);
     }
   
-    // Manual print & download
+    // Manual print receipt
     const manualPrintBtn = document.getElementById('manual-print-receipt');
     if (manualPrintBtn) {
-      manualPrintBtn.addEventListener('click', () =>
+      manualPrintBtn.addEventListener('click', () => {
+        const receiptText = document.getElementById('receipt-output').innerText;
+        if (!receiptText || receiptText.includes('Receipt will appear')) {
+          alert("No receipt available. Process a payment first.");
+          return;
+        }
+        autoPrintReceipt(receiptText);
+      });
+    }
+    
+    // Manual download receipt
+    const manualDownloadBtn = document.getElementById('manual-download-receipt');
+    if (manualDownloadBtn) {
+      manualDownloadBtn.addEventListener('click', () => {
+        const receiptText = document.getElementById('receipt-output').innerText;
+        if (!receiptText || receiptText.includes('Receipt will appear')) {
+          alert("No receipt available.");
+          return;
+        }
+        const match = receiptText.match(/Transaction ID\s*:\s*(\S+)/);
+        const txId = match ? match[1] : "receipt";
+        autoDownloadReceipt(receiptText, txId);
+        document.getElementById('receipt-status').innerHTML = '⬇️ Receipt downloaded manually.';
+      });
+    }
+  
+    // Admin dashboard refresh
+    const refreshBtn = document.getElementById('refresh-dashboard');
+    if (refreshBtn) {
+      refreshBtn.addEventListener('click', async () => {
+        if (!currentUser) { 
+          alert("Please login as admin/officer to see stats."); 
+          return; 
+        }
+        
+        const summary = await fetchRevenueSummary();
+        const supabaseStatus = supabaseClient ? "✅ Live Supabase" : "⚠️ Local fallback";
+        document.getElementById('dashboard-output').innerHTML = `
+          <strong>📊 Revenue Summary</strong><br>
+          Total Collected: $${summary.total.toFixed(2)}<br>
+          Transactions count: ${summary.count}<br>
+          Breakdown by method:<br>
+          • EcoCash: ${summary.breakdown.EcoCash || 0}<br>
+          • Card: ${summary.breakdown.Card || 0}<br>
+          • Cash: ${summary.breakdown.Cash || 0}<br>
+          <small>${supabaseStatus}</small>
+        `;
+        console.log(`Dashboard refreshed: ${summary.count} transactions, total $${summary.total}`);
+      });
+    }
+    
+    // Initialize auth status
+    updateAuthUI(null);
+  });
+</script>
+</body>
+</html>
