@@ -214,9 +214,16 @@
       margin-top: 12px;
       text-align: center;
     }
-    .success-badge {
-      background: #d1fae5;
-      color: #065f46;
+    .debug-console {
+      background: #1a1a2e;
+      color: #0f0;
+      font-family: monospace;
+      font-size: 0.7rem;
+      padding: 10px;
+      border-radius: 12px;
+      margin-top: 10px;
+      max-height: 150px;
+      overflow-y: auto;
     }
     @media (max-width: 520px) {
       .card { padding: 1.2rem; }
@@ -319,6 +326,12 @@
     </div>
   </div>
 
+  <!-- DEBUG CONSOLE -->
+  <div class="card">
+    <h2>🔍 Debug Console (Check here for errors)</h2>
+    <div id="debug-console" class="debug-console">Waiting for actions...</div>
+  </div>
+
   <footer>
     <p>TariroClinincs Mobile Collection — Safest Way</p>
   </footer>
@@ -326,24 +339,63 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
+  // Debug logging function
+  function addDebugLog(message, type = 'info') {
+    const debugDiv = document.getElementById('debug-console');
+    const timestamp = new Date().toLocaleTimeString();
+    const colors = {
+      info: '#0f0',
+      error: '#f00',
+      success: '#0f0',
+      warning: '#ff0'
+    };
+    const color = colors[type] || '#0f0';
+    const logEntry = `<div style="color: ${color}; border-bottom: 1px solid #333; padding: 4px 0;">[${timestamp}] ${message}</div>`;
+    debugDiv.innerHTML = logEntry + debugDiv.innerHTML;
+    if (debugDiv.children.length > 20) {
+      debugDiv.removeChild(debugDiv.lastChild);
+    }
+    console.log(`[${type.toUpperCase()}]`, message);
+  }
+  
+  addDebugLog("Page loaded, initializing...");
+  
   // ============================================================
   // SUPABASE CONFIGURATION
   // ============================================================
   const SUPABASE_URL = "https://ocojsigqagaehlebubdw.supabase.co";
   const SUPABASE_ANON_KEY = "sb_publishable_njwmRaZK-bnzut7bZPDpNQ_0VolCv-C";
   
-  // Initialize Supabase client - CHANGED variable name to 'supabaseClient' to avoid conflict
+  addDebugLog(`Supabase URL: ${SUPABASE_URL}`);
+  addDebugLog(`Supabase Key: ${SUPABASE_ANON_KEY.substring(0, 20)}...`);
+  
+  // Initialize Supabase client
   let supabaseClient = null;
   try {
-    // Check if supabase is loaded from CDN
     if (window.supabase) {
       supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-      console.log("Supabase client initialized successfully");
+      addDebugLog("✅ Supabase client initialized successfully", 'success');
+      
+      // Test connection by trying to fetch 1 row
+      (async () => {
+        try {
+          const { data, error } = await supabaseClient
+            .from('transactions')
+            .select('count', { count: 'exact', head: true });
+          if (error) {
+            addDebugLog(`⚠️ Connection test failed: ${error.message}`, 'warning');
+          } else {
+            addDebugLog(`✅ Supabase connection successful! Transactions table accessible`, 'success');
+          }
+        } catch (err) {
+          addDebugLog(`⚠️ Connection test error: ${err.message}`, 'warning');
+        }
+      })();
     } else {
-      console.warn("Supabase not loaded yet");
+      addDebugLog("❌ Supabase not loaded from CDN", 'error');
     }
   } catch(e) {
-    console.warn("Supabase init error:", e);
+    addDebugLog(`❌ Supabase init error: ${e.message}`, 'error');
   }
   
   // App state
@@ -404,16 +456,21 @@
   
   // Insert transaction into Supabase transactions table
   async function insertTransactionToSupabase(transaction) {
+    addDebugLog(`Attempting to insert transaction: ${transaction.transaction_id}`, 'info');
+    addDebugLog(`Transaction data: ${JSON.stringify(transaction, null, 2)}`, 'info');
+    
     if (!supabaseClient) {
-      console.warn("Supabase not configured. Saving to localStorage fallback.");
+      addDebugLog("❌ No Supabase client - saving to localStorage fallback", 'error');
       let transactions = JSON.parse(localStorage.getItem('tariro_transactions') || '[]');
       const newTx = { ...transaction, id: Date.now(), created_at: new Date().toISOString() };
       transactions.push(newTx);
       localStorage.setItem('tariro_transactions', JSON.stringify(transactions));
+      addDebugLog(`✅ Saved to localStorage fallback (total: ${transactions.length} transactions)`, 'success');
       return { success: true, data: newTx, fallback: true };
     }
     
     try {
+      addDebugLog("Sending to Supabase...", 'info');
       const { data, error } = await supabaseClient
         .from('transactions')
         .insert([{
@@ -430,14 +487,30 @@
         }])
         .select();
       
-      if (error) throw error;
+      if (error) {
+        addDebugLog(`❌ Supabase error: ${error.message}`, 'error');
+        addDebugLog(`Error details: ${JSON.stringify(error)}`, 'error');
+        throw error;
+      }
+      
+      addDebugLog(`✅ Successfully saved to Supabase! Transaction ID: ${data?.[0]?.id || 'unknown'}`, 'success');
       return { success: true, data: data?.[0] };
     } catch (err) {
-      console.error("Supabase insert error:", err);
+      addDebugLog(`❌ Supabase insert exception: ${err.message}`, 'error');
+      if (err.message.includes('row-level security') || err.message.includes('RLS')) {
+        addDebugLog(`⚠️ This appears to be an RLS (Row Level Security) issue. You may need to disable RLS or add policies to your 'transactions' table.`, 'warning');
+      }
+      if (err.message.includes('permission denied')) {
+        addDebugLog(`⚠️ Permission denied. Check that your anon key has INSERT permissions on the transactions table.`, 'warning');
+      }
+      
+      // Fallback to localStorage
+      addDebugLog("Falling back to localStorage...", 'warning');
       let transactions = JSON.parse(localStorage.getItem('tariro_transactions') || '[]');
       const newTx = { ...transaction, id: Date.now(), created_at: new Date().toISOString() };
       transactions.push(newTx);
       localStorage.setItem('tariro_transactions', JSON.stringify(transactions));
+      addDebugLog(`✅ Saved to localStorage fallback (total: ${transactions.length} transactions)`, 'success');
       return { success: true, data: newTx, fallback: true, error: err.message };
     }
   }
@@ -454,9 +527,10 @@
         .select('*')
         .eq('status', 'completed');
       if (error) throw error;
+      addDebugLog(`Fetched ${data?.length || 0} transactions from Supabase`, 'info');
       return data || [];
     } catch (err) {
-      console.warn("Supabase fetch error, using localStorage:", err);
+      addDebugLog(`Error fetching from Supabase: ${err.message}`, 'error');
       let transactions = JSON.parse(localStorage.getItem('tariro_transactions') || '[]');
       return transactions.filter(t => t.status === 'completed');
     }
@@ -534,6 +608,7 @@ Thank you for choosing TariroClinincs!
   
   // Process payment with Supabase sync
   async function processPayment() {
+    addDebugLog("=== PROCESSING PAYMENT START ===", 'info');
     if (!currentUser) { alert("Please login first."); switchTab('step-auth'); return; }
     if (!currentBill) { alert("No active bill. Generate bill first."); switchTab('step-customer'); return; }
     if (!selectedPaymentMethod) { alert("Please select a payment method."); return; }
@@ -551,6 +626,8 @@ Thank you for choosing TariroClinincs!
       timestamp: new Date().toISOString()
     };
   
+    addDebugLog(`Transaction prepared: ${transaction.transaction_id}`, 'info');
+  
     const processBtn = document.getElementById('process-payment');
     const originalText = processBtn.innerText;
     processBtn.innerText = "⏳ Syncing to Supabase...";
@@ -562,6 +639,7 @@ Thank you for choosing TariroClinincs!
     processBtn.disabled = false;
   
     if (!result.success) {
+      addDebugLog("❌ Transaction failed to save!", 'error');
       alert("Transaction failed. Please try again.");
       return;
     }
@@ -575,6 +653,7 @@ Thank you for choosing TariroClinincs!
     const syncMsg = result.fallback ? "(Saved locally - Supabase connection issue)" : "(Synced to Supabase)";
     document.getElementById('receipt-status').innerHTML = `✅ Receipt printed & downloaded! ${syncMsg}`;
     
+    addDebugLog(`✅ Payment completed! ${syncMsg}`, 'success');
     alert(`✅ Payment of $${currentBill.amount.toFixed(2)} via ${selectedPaymentMethod} completed.\nReceipt printed & downloaded.\n${syncMsg}`);
     
     selectedPaymentMethod = null;
@@ -596,10 +675,12 @@ Thank you for choosing TariroClinincs!
     if (user) {
       statusDiv.innerHTML = `✅ Logged in as ${user.email} (${user.role})`;
       logoutBtn.classList.remove('hidden');
+      addDebugLog(`User logged in: ${user.email} (${user.role})`, 'success');
     } else {
       statusDiv.innerHTML = `⚪ Not logged in.`;
       logoutBtn.classList.add('hidden');
       currentUser = null;
+      addDebugLog("User logged out", 'info');
     }
   }
   
@@ -611,23 +692,24 @@ Thank you for choosing TariroClinincs!
       if (tab.dataset.step === stepId) tab.classList.add('active');
       else tab.classList.remove('active');
     });
+    addDebugLog(`Switched to tab: ${stepId}`, 'info');
   }
   
   // Event Listeners
   document.addEventListener('DOMContentLoaded', () => {
-    console.log("DOM loaded, setting up event listeners");
+    addDebugLog("DOM loaded, setting up event listeners", 'info');
     
     // Tab navigation
     document.querySelectorAll('.step-tab').forEach(tab => {
       tab.addEventListener('click', () => switchTab(tab.dataset.step));
     });
   
-    // Login form - after login, auto-advance to Customer & Bill
+    // Login form
     const loginForm = document.getElementById('login-form');
     if (loginForm) {
       loginForm.addEventListener('submit', (e) => {
         e.preventDefault();
-        console.log("Login form submitted");
+        addDebugLog("Login form submitted", 'info');
         const email = document.getElementById('login-email').value.trim();
         const pwd = document.getElementById('login-password').value;
         const user = authenticateUser(email, pwd);
@@ -635,14 +717,12 @@ Thank you for choosing TariroClinincs!
           currentUser = user;
           updateAuthUI(user);
           alert(`Welcome ${user.role === 'admin' ? 'Administrator' : 'Officer'}! Moving to Customer & Bill...`);
-          console.log("Switching to customer tab");
           switchTab('step-customer');
         } else {
+          addDebugLog("Login failed: Invalid credentials", 'error');
           alert("Invalid credentials. Use any email + password (min 4 chars).");
         }
       });
-    } else {
-      console.error("Login form not found!");
     }
   
     // Logout
@@ -660,12 +740,12 @@ Thank you for choosing TariroClinincs!
       });
     }
   
-    // Customer form - after bill generation, auto-advance to Payment
+    // Customer form
     const customerForm = document.getElementById('customer-form');
     if (customerForm) {
       customerForm.addEventListener('submit', (e) => {
         e.preventDefault();
-        console.log("Customer form submitted");
+        addDebugLog("Customer form submitted", 'info');
         if (!currentUser) { alert("Please login first."); switchTab('step-auth'); return; }
         const custId = document.getElementById('customer-id').value.trim();
         const name = document.getElementById('customer-name').value.trim();
@@ -681,8 +761,8 @@ Thank you for choosing TariroClinincs!
         document.getElementById('selected-method').innerText = 'No payment method selected.';
         document.querySelectorAll('.payment-btn').forEach(btn => btn.classList.remove('active-method'));
         document.getElementById('process-payment').disabled = true;
+        addDebugLog(`Bill generated: $${bill.amount} for ${bill.service}`, 'success');
         alert(`✅ Bill generated: $${bill.amount.toFixed(2)} for ${bill.service}. Moving to Payment...`);
-        console.log("Switching to payment tab");
         switchTab('step-payment');
       });
     }
@@ -697,6 +777,7 @@ Thank you for choosing TariroClinincs!
         selectedPaymentMethod = btn.dataset.method;
         document.getElementById('selected-method').innerHTML = `✅ Selected: <strong>${selectedPaymentMethod}</strong>`;
         document.getElementById('process-payment').disabled = false;
+        addDebugLog(`Payment method selected: ${selectedPaymentMethod}`, 'info');
       });
     });
   
@@ -739,6 +820,7 @@ Thank you for choosing TariroClinincs!
     if (refreshBtn) {
       refreshBtn.addEventListener('click', async () => {
         if (!currentUser) { alert("Please login as admin/officer."); return; }
+        addDebugLog("Refreshing dashboard...", 'info');
         const summary = await fetchRevenueSummary();
         const supabaseStatus = supabaseClient ? "✅ Live Supabase" : "⚠️ Local fallback";
         document.getElementById('dashboard-output').innerHTML = `
@@ -751,6 +833,7 @@ Thank you for choosing TariroClinincs!
           • Cash: ${summary.breakdown.Cash || 0}<br>
           <small>${supabaseStatus} - Data from transactions table</small>
         `;
+        addDebugLog(`Dashboard refreshed: ${summary.count} transactions, total $${summary.total}`, 'success');
       });
     }
   
