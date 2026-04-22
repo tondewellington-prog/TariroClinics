@@ -225,6 +225,36 @@
       max-height: 150px;
       overflow-y: auto;
     }
+    .fix-box {
+      background: #fff3cd;
+      border-left: 4px solid #ffc107;
+      padding: 12px;
+      margin-top: 12px;
+      border-radius: 12px;
+      font-size: 0.75rem;
+    }
+    .fix-box code {
+      background: #f8f9fa;
+      padding: 2px 6px;
+      border-radius: 6px;
+      font-family: monospace;
+      font-size: 0.7rem;
+      display: block;
+      margin: 8px 0;
+      white-space: pre-wrap;
+      word-break: break-all;
+    }
+    .copy-btn {
+      background: #1e6b78;
+      color: white;
+      border: none;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 0.7rem;
+      cursor: pointer;
+      width: auto;
+      margin-top: 8px;
+    }
     @media (max-width: 520px) {
       .card { padding: 1.2rem; }
       .step-tab { padding: 6px 14px; font-size: 0.7rem; }
@@ -326,10 +356,22 @@
     </div>
   </div>
 
-  <!-- DEBUG CONSOLE -->
-  <div class="card">
-    <h2>🔍 Debug Console (Check here for errors)</h2>
+  <!-- FIX INSTRUCTIONS -->
+  <div class="card" id="fix-card">
+    <h2>🔧 Supabase RLS Fix Required</h2>
     <div id="debug-console" class="debug-console">Waiting for actions...</div>
+    <div id="fix-instructions" class="fix-box">
+      <strong>⚠️ RLS Policy Blocking Inserts!</strong><br><br>
+      Copy and run this SQL in your Supabase SQL editor:<br>
+      <code id="sql-code">ALTER TABLE transactions DISABLE ROW LEVEL SECURITY;</code>
+      <button id="copy-sql-btn" class="copy-btn">📋 Copy SQL</button>
+      <br><br>
+      <strong>Or create a policy (more secure):</strong><br>
+      <code id="sql-code2">CREATE POLICY "enable_insert_for_all" ON transactions FOR INSERT WITH CHECK (true);</code>
+      <button id="copy-sql-btn2" class="copy-btn">📋 Copy SQL</button>
+      <br><br>
+      <strong>Current Status:</strong> Data is being saved to localStorage as backup.
+    </div>
   </div>
 
   <footer>
@@ -342,6 +384,7 @@
   // Debug logging function
   function addDebugLog(message, type = 'info') {
     const debugDiv = document.getElementById('debug-console');
+    if (!debugDiv) return;
     const timestamp = new Date().toLocaleTimeString();
     const colors = {
       info: '#0f0',
@@ -360,37 +403,39 @@
   
   addDebugLog("Page loaded, initializing...");
   
+  // Copy SQL buttons
+  document.getElementById('copy-sql-btn')?.addEventListener('click', () => {
+    const sql = document.getElementById('sql-code')?.innerText;
+    if (sql) {
+      navigator.clipboard.writeText(sql);
+      addDebugLog("SQL copied to clipboard!", 'success');
+      alert("SQL copied! Paste it in your Supabase SQL editor.");
+    }
+  });
+  
+  document.getElementById('copy-sql-btn2')?.addEventListener('click', () => {
+    const sql = document.getElementById('sql-code2')?.innerText;
+    if (sql) {
+      navigator.clipboard.writeText(sql);
+      addDebugLog("SQL copied to clipboard!", 'success');
+      alert("SQL copied! Paste it in your Supabase SQL editor.");
+    }
+  });
+  
   // ============================================================
   // SUPABASE CONFIGURATION
   // ============================================================
   const SUPABASE_URL = "https://ocojsigqagaehlebubdw.supabase.co";
   const SUPABASE_ANON_KEY = "sb_publishable_njwmRaZK-bnzut7bZPDpNQ_0VolCv-C";
   
-  addDebugLog(`Supabase URL: ${SUPABASE_URL}`);
-  addDebugLog(`Supabase Key: ${SUPABASE_ANON_KEY.substring(0, 20)}...`);
-  
   // Initialize Supabase client
   let supabaseClient = null;
+  let rlsErrorDetected = false;
+  
   try {
     if (window.supabase) {
       supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
       addDebugLog("✅ Supabase client initialized successfully", 'success');
-      
-      // Test connection by trying to fetch 1 row
-      (async () => {
-        try {
-          const { data, error } = await supabaseClient
-            .from('transactions')
-            .select('count', { count: 'exact', head: true });
-          if (error) {
-            addDebugLog(`⚠️ Connection test failed: ${error.message}`, 'warning');
-          } else {
-            addDebugLog(`✅ Supabase connection successful! Transactions table accessible`, 'success');
-          }
-        } catch (err) {
-          addDebugLog(`⚠️ Connection test error: ${err.message}`, 'warning');
-        }
-      })();
     } else {
       addDebugLog("❌ Supabase not loaded from CDN", 'error');
     }
@@ -457,20 +502,17 @@
   // Insert transaction into Supabase transactions table
   async function insertTransactionToSupabase(transaction) {
     addDebugLog(`Attempting to insert transaction: ${transaction.transaction_id}`, 'info');
-    addDebugLog(`Transaction data: ${JSON.stringify(transaction, null, 2)}`, 'info');
     
     if (!supabaseClient) {
-      addDebugLog("❌ No Supabase client - saving to localStorage fallback", 'error');
+      addDebugLog("❌ No Supabase client - saving to localStorage", 'error');
       let transactions = JSON.parse(localStorage.getItem('tariro_transactions') || '[]');
       const newTx = { ...transaction, id: Date.now(), created_at: new Date().toISOString() };
       transactions.push(newTx);
       localStorage.setItem('tariro_transactions', JSON.stringify(transactions));
-      addDebugLog(`✅ Saved to localStorage fallback (total: ${transactions.length} transactions)`, 'success');
       return { success: true, data: newTx, fallback: true };
     }
     
     try {
-      addDebugLog("Sending to Supabase...", 'info');
       const { data, error } = await supabaseClient
         .from('transactions')
         .insert([{
@@ -489,29 +531,29 @@
       
       if (error) {
         addDebugLog(`❌ Supabase error: ${error.message}`, 'error');
-        addDebugLog(`Error details: ${JSON.stringify(error)}`, 'error');
+        
+        // Check for RLS error
+        if (error.message.includes('row-level security') || error.message.includes('RLS') || error.code === '42501') {
+          rlsErrorDetected = true;
+          addDebugLog(`⚠️ RLS POLICY ERROR! You need to disable RLS or add insert policy.`, 'warning');
+          document.getElementById('fix-instructions')?.classList.remove('hidden');
+          document.getElementById('fix-card')?.classList.remove('hidden');
+        }
         throw error;
       }
       
-      addDebugLog(`✅ Successfully saved to Supabase! Transaction ID: ${data?.[0]?.id || 'unknown'}`, 'success');
+      addDebugLog(`✅ Successfully saved to Supabase!`, 'success');
+      document.getElementById('fix-instructions')?.classList.add('hidden');
       return { success: true, data: data?.[0] };
     } catch (err) {
-      addDebugLog(`❌ Supabase insert exception: ${err.message}`, 'error');
-      if (err.message.includes('row-level security') || err.message.includes('RLS')) {
-        addDebugLog(`⚠️ This appears to be an RLS (Row Level Security) issue. You may need to disable RLS or add policies to your 'transactions' table.`, 'warning');
-      }
-      if (err.message.includes('permission denied')) {
-        addDebugLog(`⚠️ Permission denied. Check that your anon key has INSERT permissions on the transactions table.`, 'warning');
-      }
-      
-      // Fallback to localStorage
-      addDebugLog("Falling back to localStorage...", 'warning');
+      // Save to localStorage as fallback
+      addDebugLog(`Falling back to localStorage...`, 'warning');
       let transactions = JSON.parse(localStorage.getItem('tariro_transactions') || '[]');
       const newTx = { ...transaction, id: Date.now(), created_at: new Date().toISOString() };
       transactions.push(newTx);
       localStorage.setItem('tariro_transactions', JSON.stringify(transactions));
       addDebugLog(`✅ Saved to localStorage fallback (total: ${transactions.length} transactions)`, 'success');
-      return { success: true, data: newTx, fallback: true, error: err.message };
+      return { success: true, data: newTx, fallback: true };
     }
   }
   
@@ -630,7 +672,7 @@ Thank you for choosing TariroClinincs!
   
     const processBtn = document.getElementById('process-payment');
     const originalText = processBtn.innerText;
-    processBtn.innerText = "⏳ Syncing to Supabase...";
+    processBtn.innerText = "⏳ Processing...";
     processBtn.disabled = true;
   
     const result = await insertTransactionToSupabase(transaction);
@@ -650,7 +692,12 @@ Thank you for choosing TariroClinincs!
     autoPrintReceipt(receiptText);
     autoDownloadReceipt(receiptText, transaction.transaction_id);
     
-    const syncMsg = result.fallback ? "(Saved locally - Supabase connection issue)" : "(Synced to Supabase)";
+    let syncMsg = "";
+    if (result.fallback) {
+      syncMsg = "⚠️ Saved to localStorage only. RLS policy blocking Supabase. Check fix instructions above.";
+    } else {
+      syncMsg = "✅ Synced to Supabase successfully!";
+    }
     document.getElementById('receipt-status').innerHTML = `✅ Receipt printed & downloaded! ${syncMsg}`;
     
     addDebugLog(`✅ Payment completed! ${syncMsg}`, 'success');
@@ -790,55 +837,4 @@ Thank you for choosing TariroClinincs!
     // Manual print & download
     const manualPrintBtn = document.getElementById('manual-print-receipt');
     if (manualPrintBtn) {
-      manualPrintBtn.addEventListener('click', () => {
-        const receiptText = document.getElementById('receipt-output').innerText;
-        if (!receiptText || receiptText.includes('Receipt will appear')) {
-          alert("No receipt available. Process a payment first.");
-          return;
-        }
-        autoPrintReceipt(receiptText);
-      });
-    }
-    
-    const manualDownloadBtn = document.getElementById('manual-download-receipt');
-    if (manualDownloadBtn) {
-      manualDownloadBtn.addEventListener('click', () => {
-        const receiptText = document.getElementById('receipt-output').innerText;
-        if (!receiptText || receiptText.includes('Receipt will appear')) {
-          alert("No receipt available.");
-          return;
-        }
-        const match = receiptText.match(/Transaction ID\s*:\s*(\S+)/);
-        const txId = match ? match[1] : "receipt";
-        autoDownloadReceipt(receiptText, txId);
-        document.getElementById('receipt-status').innerHTML = '⬇️ Receipt downloaded manually.';
-      });
-    }
-  
-    // Admin dashboard refresh
-    const refreshBtn = document.getElementById('refresh-dashboard');
-    if (refreshBtn) {
-      refreshBtn.addEventListener('click', async () => {
-        if (!currentUser) { alert("Please login as admin/officer."); return; }
-        addDebugLog("Refreshing dashboard...", 'info');
-        const summary = await fetchRevenueSummary();
-        const supabaseStatus = supabaseClient ? "✅ Live Supabase" : "⚠️ Local fallback";
-        document.getElementById('dashboard-output').innerHTML = `
-          <strong>📊 Revenue Summary</strong><br>
-          Total Collected: $${summary.total.toFixed(2)}<br>
-          Transactions count: ${summary.count}<br>
-          Breakdown by method:<br>
-          • EcoCash: ${summary.breakdown.EcoCash || 0}<br>
-          • Card: ${summary.breakdown.Card || 0}<br>
-          • Cash: ${summary.breakdown.Cash || 0}<br>
-          <small>${supabaseStatus} - Data from transactions table</small>
-        `;
-        addDebugLog(`Dashboard refreshed: ${summary.count} transactions, total $${summary.total}`, 'success');
-      });
-    }
-  
-    updateAuthUI(null);
-  });
-</script>
-</body>
-</html>
+      manualPrintBtn.addEventListener('click', () =>
