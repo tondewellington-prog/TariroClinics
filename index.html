@@ -327,22 +327,16 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
   // ============================================================
-  // SUPABASE CONFIGURATION - REPLACE WITH YOUR CREDENTIALS
+  // SUPABASE CONFIGURATION
   // ============================================================
-  const SUPABASE_URL = "https://ocojsigqagaehlebubdw.supabase.co";      // <-- REPLACE WITH YOUR URL
-  const SUPABASE_ANON_KEY = "sb_publishable_njwmRaZK-bnzut7bZPDpNQ_0VolCv-C";                   // <-- REPLACE WITH YOUR ANON KEY
+  const SUPABASE_URL = "https://ocojsigqagaehlebubdw.supabase.co";
+  const SUPABASE_ANON_KEY = "sb_publishable_njwmRaZK-bnzut7bZPDpNQ_0VolCv-C";
   
   // Initialize Supabase client
   let supabase = null;
   try {
-    if (typeof supabaseJs !== 'undefined') {
-      const { createClient } = supabaseJs;
-      supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-    } else if (window.supabase) {
-      supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-    } else {
-      supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-    }
+    const { createClient } = supabase;
+    supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
     console.log("Supabase client initialized");
   } catch(e) {
     console.warn("Supabase init error:", e);
@@ -408,7 +402,6 @@
   async function insertTransactionToSupabase(transaction) {
     if (!supabase) {
       console.warn("Supabase not configured. Saving to localStorage fallback.");
-      // Fallback to localStorage
       let transactions = JSON.parse(localStorage.getItem('tariro_transactions') || '[]');
       const newTx = { ...transaction, id: Date.now(), created_at: new Date().toISOString() };
       transactions.push(newTx);
@@ -437,7 +430,6 @@
       return { success: true, data: data?.[0] };
     } catch (err) {
       console.error("Supabase insert error:", err);
-      // Fallback to localStorage on error
       let transactions = JSON.parse(localStorage.getItem('tariro_transactions') || '[]');
       const newTx = { ...transaction, id: Date.now(), created_at: new Date().toISOString() };
       transactions.push(newTx);
@@ -477,10 +469,10 @@
     return { total, count: transactions.length, breakdown };
   }
   
-  // Build receipt text
+  // Build receipt text - FIXED: removed the stray semicolon
   function buildReceipt(tx) {
     const date = new Date(tx.timestamp).toLocaleString();
-    return `;
+    return `
 ====================================
      🏥 TARIRO CLINICS
      Mobile Collection Receipt
@@ -555,13 +547,11 @@ Thank you for choosing TariroClinincs!
       timestamp: new Date().toISOString()
     };
   
-    // Show loading state
     const processBtn = document.getElementById('process-payment');
     const originalText = processBtn.innerText;
     processBtn.innerText = "⏳ Syncing to Supabase...";
     processBtn.disabled = true;
   
-    // Insert to Supabase (with fallback)
     const result = await insertTransactionToSupabase(transaction);
     
     processBtn.innerText = originalText;
@@ -572,11 +562,9 @@ Thank you for choosing TariroClinincs!
       return;
     }
   
-    // Build receipt
     const receiptText = buildReceipt(transaction);
     document.getElementById('receipt-output').innerText = receiptText;
     
-    // Auto print & download
     autoPrintReceipt(receiptText);
     autoDownloadReceipt(receiptText, transaction.transaction_id);
     
@@ -585,7 +573,6 @@ Thank you for choosing TariroClinincs!
     
     alert(`✅ Payment of $${currentBill.amount.toFixed(2)} via ${selectedPaymentMethod} completed.\nReceipt printed & downloaded.\n${syncMsg}`);
     
-    // Reset payment method UI
     selectedPaymentMethod = null;
     document.getElementById('selected-method').innerText = 'No payment method selected.';
     document.querySelectorAll('.payment-btn').forEach(btn => btn.classList.remove('active-method'));
@@ -622,11 +609,6 @@ Thank you for choosing TariroClinincs!
     });
   }
   
-  // Auto-advance to next step function
-  function advanceToNextStep(currentStepId, nextStepId) {
-    switchTab(nextStepId);
-  }
-  
   // Event Listeners
   document.addEventListener('DOMContentLoaded', () => {
     // Tab navigation
@@ -645,7 +627,6 @@ Thank you for choosing TariroClinincs!
         currentUser = user;
         updateAuthUI(user);
         alert(`Welcome ${user.role === 'admin' ? 'Administrator' : 'Officer'}! Moving to Customer & Bill...`);
-        // AUTO ADVANCE to customer form after successful login
         switchTab('step-customer');
       } else {
         alert("Invalid credentials. Use any email + password (min 4 chars).");
@@ -679,13 +660,11 @@ Thank you for choosing TariroClinincs!
       if (!bill) return;
       currentBill = bill;
       renderBill(bill);
-      // Reset payment method for new bill
       selectedPaymentMethod = null;
       document.getElementById('selected-method').innerText = 'No payment method selected.';
       document.querySelectorAll('.payment-btn').forEach(btn => btn.classList.remove('active-method'));
       document.getElementById('process-payment').disabled = true;
       alert(`✅ Bill generated: $${bill.amount.toFixed(2)} for ${bill.service}. Moving to Payment...`);
-      // AUTO ADVANCE to payment tab after bill generation
       switchTab('step-payment');
     });
   
