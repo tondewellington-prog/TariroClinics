@@ -21,14 +21,12 @@
       min-height: 100vh;
     }
 
-    /* main container - compact, centered */
     .app-container {
       max-width: 680px;
       width: 100%;
       margin: 0 auto;
     }
 
-    /* header branding */
     .brand-header {
       background: linear-gradient(135deg, #0b3b3f 0%, #1a5f6b 100%);
       border-radius: 28px;
@@ -49,7 +47,6 @@
       font-size: 0.85rem;
     }
 
-    /* card style - compact */
     .card {
       background: white;
       border-radius: 28px;
@@ -57,7 +54,6 @@
       box-shadow: 0 8px 24px rgba(0, 0, 0, 0.05);
       margin-bottom: 1.5rem;
       border: 1px solid #e2edf2;
-      transition: all 0.2s;
     }
     .card h2 {
       font-size: 1.35rem;
@@ -107,14 +103,6 @@
     }
     button.secondary {
       background: #475569;
-    }
-    button.secondary:hover {
-      background: #2d3a4b;
-    }
-    button:disabled {
-      background: #a0c0c7;
-      cursor: not-allowed;
-      opacity: 0.6;
     }
     .payment-row {
       display: flex;
@@ -176,7 +164,6 @@
       margin: 1rem 0;
       border-color: #dee9ef;
     }
-    /* step navigation - compact buttons */
     .step-nav {
       display: flex;
       gap: 10px;
@@ -195,16 +182,12 @@
       transition: all 0.2s ease;
       color: #1e4a5f;
       text-align: center;
-      flex: 0 1 auto;
     }
     .step-tab.active {
       background: #1a5f6b;
       border-color: #1a5f6b;
       color: white;
       box-shadow: 0 4px 10px rgba(26,95,107,0.3);
-    }
-    .step-tab:hover:not(.active) {
-      background: #e2edf2;
     }
     .panel {
       display: none;
@@ -231,6 +214,10 @@
       margin-top: 12px;
       text-align: center;
     }
+    .success-badge {
+      background: #d1fae5;
+      color: #065f46;
+    }
     @media (max-width: 520px) {
       .card { padding: 1.2rem; }
       .step-tab { padding: 6px 14px; font-size: 0.7rem; }
@@ -242,10 +229,10 @@
 <div class="app-container">
   <div class="brand-header">
     <h1>🏥 TariroClinincs</h1>
-    <p>Mobile Collection & Smart Billing</p>
+    <p>Mobile Collection & Easy Billing</p>
   </div>
 
-  <!-- STEP NAVIGATION (multi-step) -->
+  <!-- STEP NAVIGATION -->
   <div class="step-nav">
     <div class="step-tab active" data-step="step-auth">🔐 Authentication</div>
     <div class="step-tab" data-step="step-customer">📋 Customer & Bill</div>
@@ -266,7 +253,7 @@
       </form>
       <button id="logout-btn" class="secondary hidden" style="margin-top: 12px;">Logout</button>
       <div id="auth-status" class="status-badge" style="margin-top: 16px;">⚪ Not logged in.</div>
-      <div class="inline-note">Demo: any email + password (min 4 chars). Use "admin" in email for admin role.</div>
+      <div class="inline-note">A Product Of TariroClinics</div>
     </div>
   </div>
 
@@ -288,20 +275,18 @@
           <option value="Consultation">Consultation ($45.00)</option>
           <option value="Bill Payment">Bill Payment (custom amount)</option>
         </select>
-        <label>Amount Due (optional override)</label>
+        <label>Amount Due / Chikwereti (optional override)</label>
         <input id="amount-due" type="number" step="0.01" min="0" placeholder="Leave empty for default" />
-        <button type="submit">💰 Generate Bill →</button>
+        <button type="submit">💰 Generate Bill & Continue →</button>
       </form>
     </div>
-
     <div class="card">
       <h2>🧾 Current Bill Details</h2>
       <div id="bill-output" class="output">No bill generated. Fill and submit form above.</div>
     </div>
-    <div class="inline-note">✔ After generating bill, proceed to Payment tab</div>
   </div>
 
-  <!-- PANEL 3: PAYMENT + RECEIPT (with auto-download + auto-print) -->
+  <!-- PANEL 3: PAYMENT + RECEIPT -->
   <div id="step-payment" class="panel">
     <div class="card">
       <h2>💵 Select Payment Method</h2>
@@ -311,14 +296,12 @@
         <button data-method="Cash" class="payment-btn">💵 Cash</button>
       </div>
       <p id="selected-method" class="muted">No payment method selected.</p>
-      
       <h2 style="margin-top: 1rem;">⚙️ Process Payment</h2>
       <button id="process-payment" disabled>✅ Pay & Generate Receipt</button>
     </div>
-
     <div class="card">
       <h2>🧾 Receipt (Auto-Print + Auto-Download)</h2>
-      <pre id="receipt-output" class="output">Receipt will appear after payment. It will be automatically printed & downloaded as PDF/text file.</pre>
+      <pre id="receipt-output" class="output">Receipt will appear after payment.</pre>
       <div class="flex-between" style="margin-top: 16px;">
         <button id="manual-print-receipt" class="secondary" style="width: auto;">🖨️ Print Again</button>
         <button id="manual-download-receipt" class="secondary" style="width: auto;">⬇️ Download Receipt</button>
@@ -327,41 +310,57 @@
     </div>
   </div>
 
-  <!-- PANEL 4: ADMIN DASHBOARD (clean, no supabase mentions) -->
+  <!-- PANEL 4: ADMIN DASHBOARD -->
   <div id="step-admin" class="panel">
     <div class="card">
       <h2>📊 Admin Dashboard</h2>
       <button id="refresh-dashboard">🔄 Refresh Revenue</button>
-      <div id="dashboard-output" class="output">Click refresh to load transaction summary.</div>
-      <hr />
-      <div class="inline-note">✅ All transactions stored locally (secure mock storage). Real-time sync ready for production.</div>
+      <div id="dashboard-output" class="output">Click refresh to reload</div>
     </div>
   </div>
 
   <footer>
-    <p>TariroClinincs Mobile Collection — Secure step-by-step workflow | Receipt auto‑print & auto‑download</p>
+    <p>TariroClinincs Mobile Collection — Safest Way</p>
   </footer>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
-  // ------------------------------
-  // NO SUPABASE MESSAGES IN UI - Fully functional mock/localStorage
-  // Auto-download receipt + auto-print
-  // ------------------------------
+  // ============================================================
+  // SUPABASE CONFIGURATION - REPLACE WITH YOUR CREDENTIALS
+  // ============================================================
+  const SUPABASE_URL = "https://ocojsigqagaehlebubdw.supabase.co";      // <-- REPLACE WITH YOUR URL
+  const SUPABASE_ANON_KEY = "sb_publishable_njwmRaZK-bnzut7bZPDpNQ_0VolCv-C";                   // <-- REPLACE WITH YOUR ANON KEY
   
+  // Initialize Supabase client
+  let supabase = null;
+  try {
+    if (typeof supabaseJs !== 'undefined') {
+      const { createClient } = supabaseJs;
+      supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    } else if (window.supabase) {
+      supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    } else {
+      supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    }
+    console.log("Supabase client initialized");
+  } catch(e) {
+    console.warn("Supabase init error:", e);
+  }
+  
+  // App state
   let currentUser = null;      
   let currentBill = null;      
   let selectedPaymentMethod = null;
-  let lastReceiptText = "";
-
-  // Helper: default pricing based on service
+  
+  // Helper: default pricing
   function getDefaultAmount(service) {
     if (service === 'Clinic Fee') return 15.00;
     if (service === 'Consultation') return 45.00;
-    return null; // Bill Payment requires override
+    return null;
   }
-
-  // Generate Bill object
+  
+  // Generate Bill
   function generateBill(custId, fullName, accountNo, service, amountOverride) {
     let amountDue = null;
     if (amountOverride !== undefined && amountOverride !== '' && parseFloat(amountOverride) >= 0) {
@@ -377,7 +376,7 @@
       alert("Please provide a valid amount.");
       return null;
     }
-    const bill = {
+    return {
       customerId: custId,
       fullName: fullName,
       accountNumber: accountNo,
@@ -386,16 +385,16 @@
       generatedAt: new Date().toISOString(),
       billRef: `BILL-${Date.now()}`
     };
-    return bill;
   }
-
+  
   // Render Bill Output
   function renderBill(bill) {
+    const outputDiv = document.getElementById('bill-output');
     if (!bill) {
-      document.getElementById('bill-output').innerHTML = 'No bill generated yet. Fill customer info and generate.';
+      outputDiv.innerHTML = 'No bill generated yet. Fill customer info and generate.';
       return;
     }
-    document.getElementById('bill-output').innerHTML = `
+    outputDiv.innerHTML = `
       <strong>🧾 Reference:</strong> ${bill.billRef}<br>
       <strong>Customer:</strong> ${bill.fullName} (${bill.customerId})<br>
       <strong>Account/Patient#:</strong> ${bill.accountNumber}<br>
@@ -404,41 +403,84 @@
       <small>Generated: ${new Date(bill.generatedAt).toLocaleString()}</small>
     `;
   }
-
-  // Insert transaction into localStorage (mock database)
-  function insertTransaction(transaction) {
-    let transactions = JSON.parse(localStorage.getItem('tariro_transactions') || '[]');
-    const newTx = { ...transaction, id: Date.now(), created_at: new Date().toISOString() };
-    transactions.push(newTx);
-    localStorage.setItem('tariro_transactions', JSON.stringify(transactions));
-    return { success: true, data: newTx };
+  
+  // Insert transaction into Supabase transactions table
+  async function insertTransactionToSupabase(transaction) {
+    if (!supabase) {
+      console.warn("Supabase not configured. Saving to localStorage fallback.");
+      // Fallback to localStorage
+      let transactions = JSON.parse(localStorage.getItem('tariro_transactions') || '[]');
+      const newTx = { ...transaction, id: Date.now(), created_at: new Date().toISOString() };
+      transactions.push(newTx);
+      localStorage.setItem('tariro_transactions', JSON.stringify(transactions));
+      return { success: true, data: newTx, fallback: true };
+    }
+    
+    try {
+      const { data, error } = await supabase
+        .from('transactions')
+        .insert([{
+          transaction_id: transaction.transaction_id,
+          customer_id: transaction.customer_id,
+          customer_name: transaction.customer_name,
+          account_number: transaction.account_number,
+          service: transaction.service,
+          amount: transaction.amount,
+          payment_method: transaction.payment_method,
+          status: transaction.status,
+          officer_email: transaction.officer_email,
+          timestamp: transaction.timestamp
+        }])
+        .select();
+      
+      if (error) throw error;
+      return { success: true, data: data?.[0] };
+    } catch (err) {
+      console.error("Supabase insert error:", err);
+      // Fallback to localStorage on error
+      let transactions = JSON.parse(localStorage.getItem('tariro_transactions') || '[]');
+      const newTx = { ...transaction, id: Date.now(), created_at: new Date().toISOString() };
+      transactions.push(newTx);
+      localStorage.setItem('tariro_transactions', JSON.stringify(transactions));
+      return { success: true, data: newTx, fallback: true, error: err.message };
+    }
   }
-
-  // fetch revenue summary for admin dashboard
-  function fetchRevenueSummary() {
-    let transactions = JSON.parse(localStorage.getItem('tariro_transactions') || '[]');
-    const completed = transactions.filter(t => t.status === 'completed');
-    const total = completed.reduce((s, t) => s + (t.amount || 0), 0);
+  
+  // Fetch transactions from Supabase (or fallback)
+  async function fetchTransactionsFromSupabase() {
+    if (!supabase) {
+      let transactions = JSON.parse(localStorage.getItem('tariro_transactions') || '[]');
+      return transactions.filter(t => t.status === 'completed');
+    }
+    try {
+      const { data, error } = await supabase
+        .from('transactions')
+        .select('*')
+        .eq('status', 'completed');
+      if (error) throw error;
+      return data || [];
+    } catch (err) {
+      console.warn("Supabase fetch error, using localStorage:", err);
+      let transactions = JSON.parse(localStorage.getItem('tariro_transactions') || '[]');
+      return transactions.filter(t => t.status === 'completed');
+    }
+  }
+  
+  // Fetch revenue summary
+  async function fetchRevenueSummary() {
+    const transactions = await fetchTransactionsFromSupabase();
+    const total = transactions.reduce((s, t) => s + (t.amount || 0), 0);
     const breakdown = { EcoCash: 0, Card: 0, Cash: 0 };
-    completed.forEach(t => {
+    transactions.forEach(t => {
       if (t.payment_method) breakdown[t.payment_method] = (breakdown[t.payment_method] || 0) + 1;
     });
-    return { total, count: completed.length, breakdown };
+    return { total, count: transactions.length, breakdown };
   }
-
-  // Authentication mock
-  function authenticateUser(email, password) {
-    if (!email || !password || password.length < 4) return null;
-    const lowerEmail = email.toLowerCase();
-    let role = 'officer';
-    if (lowerEmail.includes('admin')) role = 'admin';
-    return { email, role, authenticated: true };
-  }
-
-  // Build receipt text from transaction
+  
+  // Build receipt text
   function buildReceipt(tx) {
     const date = new Date(tx.timestamp).toLocaleString();
-    return `
+    return `;
 ====================================
      🏥 TARIRO CLINICS
      Mobile Collection Receipt
@@ -458,27 +500,24 @@ Thank you for choosing TariroClinincs!
 ====================================
 `;
   }
-
-  // AUTO PRINT function (opens print dialog)
+  
+  // Auto print
   function autoPrintReceipt(receiptText) {
     const printWindow = window.open('', '_blank', 'width=500,height=600');
     if (!printWindow) {
-      document.getElementById('receipt-status').innerHTML = '⚠️ Popup blocked. Please allow popups for auto-print.';
+      document.getElementById('receipt-status').innerHTML = '⚠️ Popup blocked. Please allow popups.';
       return false;
     }
     printWindow.document.write(`
       <html><head><title>TariroClinincs Receipt</title>
-      <style>
-        body { font-family: monospace; padding: 2rem; text-align: center; white-space: pre-wrap; background: white; }
-        pre { font-size: 0.9rem; margin: 0 auto; background: #f9f9f9; padding: 1rem; border-radius: 12px; }
-      </style>
+      <style>body { font-family: monospace; padding: 2rem; text-align: center; white-space: pre-wrap; } pre { font-size: 0.9rem; background: #f9f9f9; padding: 1rem; }</style>
       </head><body><pre>${receiptText}</pre><script>window.onload=()=>{ window.print(); setTimeout(()=>window.close(), 1000); }<\/script></body></html>
     `);
     printWindow.document.close();
     return true;
   }
-
-  // AUTO DOWNLOAD receipt as .txt file
+  
+  // Auto download
   function autoDownloadReceipt(receiptText, txId) {
     try {
       const blob = new Blob([receiptText], { type: 'text/plain' });
@@ -490,21 +529,19 @@ Thank you for choosing TariroClinincs!
       link.click();
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
-      document.getElementById('receipt-status').innerHTML = '✅ Receipt downloaded automatically!';
       return true;
     } catch (err) {
       console.warn(err);
-      document.getElementById('receipt-status').innerHTML = '⚠️ Download failed, but you can use manual button.';
       return false;
     }
   }
-
-  // Process payment + receipt + auto print + auto download
+  
+  // Process payment with Supabase sync
   async function processPayment() {
-    if (!currentUser) { alert("Please login first (Authentication tab)."); document.querySelector('[data-step="step-auth"]').click(); return; }
-    if (!currentBill) { alert("No active bill. Please generate a bill in Customer & Bill tab."); document.querySelector('[data-step="step-customer"]').click(); return; }
-    if (!selectedPaymentMethod) { alert("Please select a payment method (EcoCash, Card, Cash)."); return; }
-
+    if (!currentUser) { alert("Please login first."); switchTab('step-auth'); return; }
+    if (!currentBill) { alert("No active bill. Generate bill first."); switchTab('step-customer'); return; }
+    if (!selectedPaymentMethod) { alert("Please select a payment method."); return; }
+  
     const transaction = {
       transaction_id: `TXN-${Date.now()}`,
       customer_id: currentBill.customerId,
@@ -517,42 +554,51 @@ Thank you for choosing TariroClinincs!
       officer_email: currentUser.email,
       timestamp: new Date().toISOString()
     };
-
-    // Store to localStorage
-    const result = insertTransaction(transaction);
+  
+    // Show loading state
+    const processBtn = document.getElementById('process-payment');
+    const originalText = processBtn.innerText;
+    processBtn.innerText = "⏳ Syncing to Supabase...";
+    processBtn.disabled = true;
+  
+    // Insert to Supabase (with fallback)
+    const result = await insertTransactionToSupabase(transaction);
+    
+    processBtn.innerText = originalText;
+    processBtn.disabled = false;
+  
     if (!result.success) {
-      alert("Transaction storage failed.");
+      alert("Transaction failed. Please try again.");
       return;
     }
-    
+  
     // Build receipt
     const receiptText = buildReceipt(transaction);
-    lastReceiptText = receiptText;
     document.getElementById('receipt-output').innerText = receiptText;
     
-    // AUTO PRINT
-    const printSuccess = autoPrintReceipt(receiptText);
-    // AUTO DOWNLOAD
+    // Auto print & download
+    autoPrintReceipt(receiptText);
     autoDownloadReceipt(receiptText, transaction.transaction_id);
     
-    if (!printSuccess) {
-      document.getElementById('receipt-status').innerHTML = '⚠️ Auto-print blocked, but receipt downloaded. Use manual print.';
-    } else {
-      document.getElementById('receipt-status').innerHTML = '🖨️ Receipt printed & downloaded successfully!';
-    }
+    const syncMsg = result.fallback ? "(Saved locally - Supabase connection issue)" : "(Synced to Supabase)";
+    document.getElementById('receipt-status').innerHTML = `✅ Receipt printed & downloaded! ${syncMsg}`;
     
-    alert(`✅ Payment of $${currentBill.amount.toFixed(2)} via ${selectedPaymentMethod} completed.\nReceipt printed & downloaded.`);
+    alert(`✅ Payment of $${currentBill.amount.toFixed(2)} via ${selectedPaymentMethod} completed.\nReceipt printed & downloaded.\n${syncMsg}`);
     
-    // Reset payment method UI (but keep bill for possible reprint)
+    // Reset payment method UI
     selectedPaymentMethod = null;
     document.getElementById('selected-method').innerText = 'No payment method selected.';
     document.querySelectorAll('.payment-btn').forEach(btn => btn.classList.remove('active-method'));
     document.getElementById('process-payment').disabled = true;
-    
-    // refresh dashboard data if admin later
   }
-
-  // Update UI after login/logout
+  
+  // Authentication
+  function authenticateUser(email, password) {
+    if (!email || !password || password.length < 4) return null;
+    const role = email.toLowerCase().includes('admin') ? 'admin' : 'officer';
+    return { email, role, authenticated: true };
+  }
+  
   function updateAuthUI(user) {
     const statusDiv = document.getElementById('auth-status');
     const logoutBtn = document.getElementById('logout-btn');
@@ -565,30 +611,30 @@ Thank you for choosing TariroClinincs!
       currentUser = null;
     }
   }
-
-  // Event Listeners & Initialization
-  document.addEventListener('DOMContentLoaded', () => {
-
-    // ---------- Tab Navigation ----------
-    const tabs = document.querySelectorAll('.step-tab');
-    const panels = document.querySelectorAll('.panel');
-    function switchTab(stepId) {
-      panels.forEach(panel => panel.classList.remove('active-panel'));
-      const activePanel = document.getElementById(stepId);
-      if (activePanel) activePanel.classList.add('active-panel');
-      tabs.forEach(tab => {
-        if (tab.dataset.step === stepId) tab.classList.add('active');
-        else tab.classList.remove('active');
-      });
-    }
-    tabs.forEach(tab => {
-      tab.addEventListener('click', () => {
-        const step = tab.dataset.step;
-        switchTab(step);
-      });
+  
+  // Tab switching
+  function switchTab(stepId) {
+    document.querySelectorAll('.panel').forEach(panel => panel.classList.remove('active-panel'));
+    document.getElementById(stepId).classList.add('active-panel');
+    document.querySelectorAll('.step-tab').forEach(tab => {
+      if (tab.dataset.step === stepId) tab.classList.add('active');
+      else tab.classList.remove('active');
     });
-
-    // ---------- Login Form ----------
+  }
+  
+  // Auto-advance to next step function
+  function advanceToNextStep(currentStepId, nextStepId) {
+    switchTab(nextStepId);
+  }
+  
+  // Event Listeners
+  document.addEventListener('DOMContentLoaded', () => {
+    // Tab navigation
+    document.querySelectorAll('.step-tab').forEach(tab => {
+      tab.addEventListener('click', () => switchTab(tab.dataset.step));
+    });
+  
+    // Login form - after login, auto-advance to Customer & Bill
     const loginForm = document.getElementById('login-form');
     loginForm.addEventListener('submit', (e) => {
       e.preventDefault();
@@ -598,12 +644,15 @@ Thank you for choosing TariroClinincs!
       if (user) {
         currentUser = user;
         updateAuthUI(user);
-        alert(`Welcome ${user.role === 'admin' ? 'Administrator' : 'Officer'}! You can now collect payments.`);
+        alert(`Welcome ${user.role === 'admin' ? 'Administrator' : 'Officer'}! Moving to Customer & Bill...`);
+        // AUTO ADVANCE to customer form after successful login
+        switchTab('step-customer');
       } else {
-        alert("Invalid credentials. Use any email + password (min 4 chars). For admin, include 'admin' in email.");
+        alert("Invalid credentials. Use any email + password (min 4 chars).");
       }
     });
-
+  
+    // Logout
     document.getElementById('logout-btn').addEventListener('click', () => {
       currentUser = null;
       updateAuthUI(null);
@@ -611,14 +660,15 @@ Thank you for choosing TariroClinincs!
       document.getElementById('selected-method').innerText = 'No payment method selected.';
       document.querySelectorAll('.payment-btn').forEach(btn => btn.classList.remove('active-method'));
       document.getElementById('process-payment').disabled = true;
-      alert("Logged out successfully.");
+      switchTab('step-auth');
+      alert("Logged out.");
     });
-
-    // ---------- Customer Bill Generation ----------
+  
+    // Customer form - after bill generation, auto-advance to Payment
     const customerForm = document.getElementById('customer-form');
     customerForm.addEventListener('submit', (e) => {
       e.preventDefault();
-      if (!currentUser) { alert("Please login first (Authentication tab)."); switchTab('step-auth'); return; }
+      if (!currentUser) { alert("Please login first."); switchTab('step-auth'); return; }
       const custId = document.getElementById('customer-id').value.trim();
       const name = document.getElementById('customer-name').value.trim();
       const accNo = document.getElementById('account-number').value.trim();
@@ -629,73 +679,58 @@ Thank you for choosing TariroClinincs!
       if (!bill) return;
       currentBill = bill;
       renderBill(bill);
-      // reset payment method selection for new bill
+      // Reset payment method for new bill
       selectedPaymentMethod = null;
       document.getElementById('selected-method').innerText = 'No payment method selected.';
       document.querySelectorAll('.payment-btn').forEach(btn => btn.classList.remove('active-method'));
       document.getElementById('process-payment').disabled = true;
-      alert(`✅ Bill generated: $${bill.amount.toFixed(2)} for ${bill.service}. Go to Payment tab.`);
+      alert(`✅ Bill generated: $${bill.amount.toFixed(2)} for ${bill.service}. Moving to Payment...`);
+      // AUTO ADVANCE to payment tab after bill generation
+      switchTab('step-payment');
     });
-
-    // ---------- Payment Method Selection ----------
-    const payBtns = document.querySelectorAll('.payment-btn');
-    payBtns.forEach(btn => {
+  
+    // Payment method selection
+    document.querySelectorAll('.payment-btn').forEach(btn => {
       btn.addEventListener('click', () => {
         if (!currentUser) { alert("Login required."); switchTab('step-auth'); return; }
-        if (!currentBill) { alert("Please generate a bill first in Customer tab."); switchTab('step-customer'); return; }
-        payBtns.forEach(b => b.classList.remove('active-method'));
+        if (!currentBill) { alert("Generate bill first."); switchTab('step-customer'); return; }
+        document.querySelectorAll('.payment-btn').forEach(b => b.classList.remove('active-method'));
         btn.classList.add('active-method');
         selectedPaymentMethod = btn.dataset.method;
         document.getElementById('selected-method').innerHTML = `✅ Selected: <strong>${selectedPaymentMethod}</strong>`;
         document.getElementById('process-payment').disabled = false;
       });
     });
-
-    // Process payment button
-    const processBtn = document.getElementById('process-payment');
-    processBtn.addEventListener('click', processPayment);
-
-    // Manual print receipt
-    const manualPrintBtn = document.getElementById('manual-print-receipt');
-    manualPrintBtn.addEventListener('click', () => {
-      const receiptTextElem = document.getElementById('receipt-output').innerText;
-      if (!receiptTextElem || receiptTextElem.includes('Receipt will appear after payment')) {
-        alert("No receipt available. Please process a payment first.");
+  
+    // Process payment
+    document.getElementById('process-payment').addEventListener('click', processPayment);
+  
+    // Manual print & download
+    document.getElementById('manual-print-receipt').addEventListener('click', () => {
+      const receiptText = document.getElementById('receipt-output').innerText;
+      if (!receiptText || receiptText.includes('Receipt will appear')) {
+        alert("No receipt available. Process a payment first.");
         return;
       }
-      autoPrintReceipt(receiptTextElem);
-      document.getElementById('receipt-status').innerHTML = '🖨️ Manual print triggered.';
+      autoPrintReceipt(receiptText);
     });
-
-    // Manual download receipt
-    const manualDownloadBtn = document.getElementById('manual-download-receipt');
-    manualDownloadBtn.addEventListener('click', () => {
-      const receiptTextElem = document.getElementById('receipt-output').innerText;
-      if (!receiptTextElem || receiptTextElem.includes('Receipt will appear after payment')) {
-        alert("No receipt available. Please process a payment first.");
+    document.getElementById('manual-download-receipt').addEventListener('click', () => {
+      const receiptText = document.getElementById('receipt-output').innerText;
+      if (!receiptText || receiptText.includes('Receipt will appear')) {
+        alert("No receipt available.");
         return;
       }
-      // extract transaction ID from receipt if needed or generate filename
-      let txId = "receipt";
-      const match = receiptTextElem.match(/Transaction ID\s*:\s*(\S+)/);
-      if (match) txId = match[1];
-      const blob = new Blob([receiptTextElem], { type: 'text/plain' });
-      const link = document.createElement('a');
-      const url = URL.createObjectURL(blob);
-      link.href = url;
-      link.download = `Receipt_${txId}.txt`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(url);
+      const match = receiptText.match(/Transaction ID\s*:\s*(\S+)/);
+      const txId = match ? match[1] : "receipt";
+      autoDownloadReceipt(receiptText, txId);
       document.getElementById('receipt-status').innerHTML = '⬇️ Receipt downloaded manually.';
     });
-
-    // Admin dashboard refresh (clean, no supabase messages)
-    const refreshBtn = document.getElementById('refresh-dashboard');
-    refreshBtn.addEventListener('click', () => {
-      if (!currentUser) { alert("Please login as admin/officer to see stats."); return; }
-      const summary = fetchRevenueSummary();
+  
+    // Admin dashboard refresh
+    document.getElementById('refresh-dashboard').addEventListener('click', async () => {
+      if (!currentUser) { alert("Please login as admin/officer."); return; }
+      const summary = await fetchRevenueSummary();
+      const supabaseStatus = supabase ? "✅ Live Supabase" : "⚠️ Local fallback";
       document.getElementById('dashboard-output').innerHTML = `
         <strong>📊 Revenue Summary</strong><br>
         Total Collected: $${summary.total.toFixed(2)}<br>
@@ -704,11 +739,10 @@ Thank you for choosing TariroClinincs!
         • EcoCash: ${summary.breakdown.EcoCash || 0}<br>
         • Card: ${summary.breakdown.Card || 0}<br>
         • Cash: ${summary.breakdown.Cash || 0}<br>
-        <small>Local secure storage</small>
+        <small>${supabaseStatus} - Data from transactions table</small>
       `;
     });
-    
-    // init auth status
+  
     updateAuthUI(null);
   });
 </script>
