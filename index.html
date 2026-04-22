@@ -332,12 +332,16 @@
   const SUPABASE_URL = "https://ocojsigqagaehlebubdw.supabase.co";
   const SUPABASE_ANON_KEY = "sb_publishable_njwmRaZK-bnzut7bZPDpNQ_0VolCv-C";
   
-  // Initialize Supabase client
+  // Initialize Supabase client - FIXED: properly create client from window.supabase
   let supabase = null;
   try {
-    const { createClient } = supabase;
-    supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-    console.log("Supabase client initialized");
+    // Check if supabase is loaded from CDN
+    if (window.supabase) {
+      supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+      console.log("Supabase client initialized successfully");
+    } else {
+      console.warn("Supabase not loaded yet");
+    }
   } catch(e) {
     console.warn("Supabase init error:", e);
   }
@@ -469,7 +473,7 @@
     return { total, count: transactions.length, breakdown };
   }
   
-  // Build receipt text - FIXED: removed the stray semicolon
+  // Build receipt text
   function buildReceipt(tx) {
     const date = new Date(tx.timestamp).toLocaleString();
     return `
@@ -611,6 +615,8 @@ Thank you for choosing TariroClinincs!
   
   // Event Listeners
   document.addEventListener('DOMContentLoaded', () => {
+    console.log("DOM loaded, setting up event listeners");
+    
     // Tab navigation
     document.querySelectorAll('.step-tab').forEach(tab => {
       tab.addEventListener('click', () => switchTab(tab.dataset.step));
@@ -618,55 +624,68 @@ Thank you for choosing TariroClinincs!
   
     // Login form - after login, auto-advance to Customer & Bill
     const loginForm = document.getElementById('login-form');
-    loginForm.addEventListener('submit', (e) => {
-      e.preventDefault();
-      const email = document.getElementById('login-email').value.trim();
-      const pwd = document.getElementById('login-password').value;
-      const user = authenticateUser(email, pwd);
-      if (user) {
-        currentUser = user;
-        updateAuthUI(user);
-        alert(`Welcome ${user.role === 'admin' ? 'Administrator' : 'Officer'}! Moving to Customer & Bill...`);
-        switchTab('step-customer');
-      } else {
-        alert("Invalid credentials. Use any email + password (min 4 chars).");
-      }
-    });
+    if (loginForm) {
+      loginForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        console.log("Login form submitted");
+        const email = document.getElementById('login-email').value.trim();
+        const pwd = document.getElementById('login-password').value;
+        const user = authenticateUser(email, pwd);
+        if (user) {
+          currentUser = user;
+          updateAuthUI(user);
+          alert(`Welcome ${user.role === 'admin' ? 'Administrator' : 'Officer'}! Moving to Customer & Bill...`);
+          console.log("Switching to customer tab");
+          switchTab('step-customer');
+        } else {
+          alert("Invalid credentials. Use any email + password (min 4 chars).");
+        }
+      });
+    } else {
+      console.error("Login form not found!");
+    }
   
     // Logout
-    document.getElementById('logout-btn').addEventListener('click', () => {
-      currentUser = null;
-      updateAuthUI(null);
-      selectedPaymentMethod = null;
-      document.getElementById('selected-method').innerText = 'No payment method selected.';
-      document.querySelectorAll('.payment-btn').forEach(btn => btn.classList.remove('active-method'));
-      document.getElementById('process-payment').disabled = true;
-      switchTab('step-auth');
-      alert("Logged out.");
-    });
+    const logoutBtn = document.getElementById('logout-btn');
+    if (logoutBtn) {
+      logoutBtn.addEventListener('click', () => {
+        currentUser = null;
+        updateAuthUI(null);
+        selectedPaymentMethod = null;
+        document.getElementById('selected-method').innerText = 'No payment method selected.';
+        document.querySelectorAll('.payment-btn').forEach(btn => btn.classList.remove('active-method'));
+        document.getElementById('process-payment').disabled = true;
+        switchTab('step-auth');
+        alert("Logged out.");
+      });
+    }
   
     // Customer form - after bill generation, auto-advance to Payment
     const customerForm = document.getElementById('customer-form');
-    customerForm.addEventListener('submit', (e) => {
-      e.preventDefault();
-      if (!currentUser) { alert("Please login first."); switchTab('step-auth'); return; }
-      const custId = document.getElementById('customer-id').value.trim();
-      const name = document.getElementById('customer-name').value.trim();
-      const accNo = document.getElementById('account-number').value.trim();
-      const service = document.getElementById('service').value;
-      const amountOverride = document.getElementById('amount-due').value;
-      if (!custId || !name || !accNo || !service) { alert("Please fill all required fields (*)"); return; }
-      const bill = generateBill(custId, name, accNo, service, amountOverride);
-      if (!bill) return;
-      currentBill = bill;
-      renderBill(bill);
-      selectedPaymentMethod = null;
-      document.getElementById('selected-method').innerText = 'No payment method selected.';
-      document.querySelectorAll('.payment-btn').forEach(btn => btn.classList.remove('active-method'));
-      document.getElementById('process-payment').disabled = true;
-      alert(`✅ Bill generated: $${bill.amount.toFixed(2)} for ${bill.service}. Moving to Payment...`);
-      switchTab('step-payment');
-    });
+    if (customerForm) {
+      customerForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        console.log("Customer form submitted");
+        if (!currentUser) { alert("Please login first."); switchTab('step-auth'); return; }
+        const custId = document.getElementById('customer-id').value.trim();
+        const name = document.getElementById('customer-name').value.trim();
+        const accNo = document.getElementById('account-number').value.trim();
+        const service = document.getElementById('service').value;
+        const amountOverride = document.getElementById('amount-due').value;
+        if (!custId || !name || !accNo || !service) { alert("Please fill all required fields (*)"); return; }
+        const bill = generateBill(custId, name, accNo, service, amountOverride);
+        if (!bill) return;
+        currentBill = bill;
+        renderBill(bill);
+        selectedPaymentMethod = null;
+        document.getElementById('selected-method').innerText = 'No payment method selected.';
+        document.querySelectorAll('.payment-btn').forEach(btn => btn.classList.remove('active-method'));
+        document.getElementById('process-payment').disabled = true;
+        alert(`✅ Bill generated: $${bill.amount.toFixed(2)} for ${bill.service}. Moving to Payment...`);
+        console.log("Switching to payment tab");
+        switchTab('step-payment');
+      });
+    }
   
     // Payment method selection
     document.querySelectorAll('.payment-btn').forEach(btn => {
@@ -682,45 +701,58 @@ Thank you for choosing TariroClinincs!
     });
   
     // Process payment
-    document.getElementById('process-payment').addEventListener('click', processPayment);
+    const processBtn = document.getElementById('process-payment');
+    if (processBtn) {
+      processBtn.addEventListener('click', processPayment);
+    }
   
     // Manual print & download
-    document.getElementById('manual-print-receipt').addEventListener('click', () => {
-      const receiptText = document.getElementById('receipt-output').innerText;
-      if (!receiptText || receiptText.includes('Receipt will appear')) {
-        alert("No receipt available. Process a payment first.");
-        return;
-      }
-      autoPrintReceipt(receiptText);
-    });
-    document.getElementById('manual-download-receipt').addEventListener('click', () => {
-      const receiptText = document.getElementById('receipt-output').innerText;
-      if (!receiptText || receiptText.includes('Receipt will appear')) {
-        alert("No receipt available.");
-        return;
-      }
-      const match = receiptText.match(/Transaction ID\s*:\s*(\S+)/);
-      const txId = match ? match[1] : "receipt";
-      autoDownloadReceipt(receiptText, txId);
-      document.getElementById('receipt-status').innerHTML = '⬇️ Receipt downloaded manually.';
-    });
+    const manualPrintBtn = document.getElementById('manual-print-receipt');
+    if (manualPrintBtn) {
+      manualPrintBtn.addEventListener('click', () => {
+        const receiptText = document.getElementById('receipt-output').innerText;
+        if (!receiptText || receiptText.includes('Receipt will appear')) {
+          alert("No receipt available. Process a payment first.");
+          return;
+        }
+        autoPrintReceipt(receiptText);
+      });
+    }
+    
+    const manualDownloadBtn = document.getElementById('manual-download-receipt');
+    if (manualDownloadBtn) {
+      manualDownloadBtn.addEventListener('click', () => {
+        const receiptText = document.getElementById('receipt-output').innerText;
+        if (!receiptText || receiptText.includes('Receipt will appear')) {
+          alert("No receipt available.");
+          return;
+        }
+        const match = receiptText.match(/Transaction ID\s*:\s*(\S+)/);
+        const txId = match ? match[1] : "receipt";
+        autoDownloadReceipt(receiptText, txId);
+        document.getElementById('receipt-status').innerHTML = '⬇️ Receipt downloaded manually.';
+      });
+    }
   
     // Admin dashboard refresh
-    document.getElementById('refresh-dashboard').addEventListener('click', async () => {
-      if (!currentUser) { alert("Please login as admin/officer."); return; }
-      const summary = await fetchRevenueSummary();
-      const supabaseStatus = supabase ? "✅ Live Supabase" : "⚠️ Local fallback";
-      document.getElementById('dashboard-output').innerHTML = `
-        <strong>📊 Revenue Summary</strong><br>
-        Total Collected: $${summary.total.toFixed(2)}<br>
-        Transactions count: ${summary.count}<br>
-        Breakdown by method:<br>
-        • EcoCash: ${summary.breakdown.EcoCash || 0}<br>
-        • Card: ${summary.breakdown.Card || 0}<br>
-        • Cash: ${summary.breakdown.Cash || 0}<br>
-        <small>${supabaseStatus} - Data from transactions table</small>
-      `;
-    });
+    const refreshBtn = document.getElementById('refresh-dashboard');
+    if (refreshBtn) {
+      refreshBtn.addEventListener('click', async () => {
+        if (!currentUser) { alert("Please login as admin/officer."); return; }
+        const summary = await fetchRevenueSummary();
+        const supabaseStatus = supabase ? "✅ Live Supabase" : "⚠️ Local fallback";
+        document.getElementById('dashboard-output').innerHTML = `
+          <strong>📊 Revenue Summary</strong><br>
+          Total Collected: $${summary.total.toFixed(2)}<br>
+          Transactions count: ${summary.count}<br>
+          Breakdown by method:<br>
+          • EcoCash: ${summary.breakdown.EcoCash || 0}<br>
+          • Card: ${summary.breakdown.Card || 0}<br>
+          • Cash: ${summary.breakdown.Cash || 0}<br>
+          <small>${supabaseStatus} - Data from transactions table</small>
+        `;
+      });
+    }
   
     updateAuthUI(null);
   });
