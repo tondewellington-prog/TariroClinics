@@ -6,14 +6,17 @@
   <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
   <title>JonasiClininc | Mobile Collection System</title>
   
-  <!-- Force HTTPS - This redirects HTTP to HTTPS -->
+  <!-- Force HTTPS on GitHub Pages -->
   <script>
     (function() {
-      // Force HTTPS except on localhost/testing environments
-      if (location.protocol !== 'https:' && 
-          location.hostname !== 'localhost' && 
-          location.hostname !== '127.0.0.1' &&
-          !location.hostname.includes('.ngrok.io')) {
+      // Redirect HTTP to HTTPS on GitHub Pages
+      if (location.hostname.includes('github.io') && location.protocol !== 'https:') {
+        location.href = 'https://' + location.hostname + location.pathname + location.search;
+      }
+      // Also handle local testing
+      if (location.protocol === 'http:' && 
+          !location.hostname.includes('localhost') && 
+          !location.hostname.includes('127.0.0.1')) {
         location.href = 'https://' + location.hostname + location.pathname + location.search;
       }
     })();
@@ -341,7 +344,6 @@
   const SUPABASE_URL = "https://ocojsigqagaehlebubdw.supabase.co";
   const SUPABASE_ANON_KEY = "sb_publishable_njwmRaZK-bnzut7bZPDpNQ_0VolCv-C";
   
-  // Initialize Supabase client
   let supabaseClient = null;
   
   try {
@@ -355,19 +357,16 @@
     console.error("❌ Supabase init error:", e.message);
   }
   
-  // App state
   let currentUser = null;      
   let currentBill = null;      
   let selectedPaymentMethod = null;
   
-  // Helper: default pricing
   function getDefaultAmount(service) {
     if (service === 'Clinic Fee') return 15.00;
     if (service === 'Consultation') return 45.00;
     return null;
   }
   
-  // Generate Bill
   function generateBill(custId, fullName, accountNo, service, amountOverride) {
     let amountDue = null;
     if (amountOverride !== undefined && amountOverride !== '' && parseFloat(amountOverride) >= 0) {
@@ -394,7 +393,6 @@
     };
   }
   
-  // Render Bill Output
   function renderBill(bill) {
     const outputDiv = document.getElementById('bill-output');
     if (!bill) {
@@ -411,13 +409,10 @@
     `;
   }
   
-  // Simple authentication (demo mode - accepts any email with 4+ char password)
   async function authenticateUser(email, password) {
     if (!email || !password) {
       return { success: false, message: "Email and password required" };
     }
-    
-    // Demo authentication - accepts any email with password length >= 4
     if (email && password.length >= 4) {
       const role = email.toLowerCase().includes('admin') ? 'admin' : 'officer';
       return { 
@@ -425,7 +420,6 @@
         user: { email, role, full_name: email.split('@')[0] }
       };
     }
-    
     return { success: false, message: "Invalid credentials. Password must be at least 4 characters." };
   }
   
@@ -444,7 +438,6 @@
     }
   }
   
-  // Insert transaction into Supabase transactions table
   async function insertTransactionToSupabase(transaction) {
     console.log(`Attempting to insert transaction: ${transaction.transaction_id}`);
     
@@ -484,7 +477,6 @@
       return { success: true, data: data?.[0] };
     } catch (err) {
       console.error("❌ Supabase insert exception:", err.message);
-      // Fallback to localStorage
       let transactions = JSON.parse(localStorage.getItem('jonasi_transactions') || '[]');
       const newTx = { ...transaction, id: Date.now(), created_at: new Date().toISOString() };
       transactions.push(newTx);
@@ -494,7 +486,6 @@
     }
   }
   
-  // Fetch transactions from Supabase (or fallback)
   async function fetchTransactionsFromSupabase() {
     if (!supabaseClient) {
       let transactions = JSON.parse(localStorage.getItem('jonasi_transactions') || '[]');
@@ -515,7 +506,6 @@
     }
   }
   
-  // Fetch revenue summary
   async function fetchRevenueSummary() {
     const transactions = await fetchTransactionsFromSupabase();
     const total = transactions.reduce((s, t) => s + (t.amount || 0), 0);
@@ -526,7 +516,6 @@
     return { total, count: transactions.length, breakdown };
   }
   
-  // Build receipt text
   function buildReceipt(tx) {
     const date = new Date(tx.timestamp).toLocaleString();
     return `
@@ -550,7 +539,6 @@ Thank you for choosing JonasiClinincs!
 `;
   }
   
-  // Auto print - no freezing, uses setTimeout
   function autoPrintReceipt(receiptText) {
     setTimeout(() => {
       const printWindow = window.open('', '_blank', 'width=500,height=600');
@@ -568,7 +556,6 @@ Thank you for choosing JonasiClinincs!
     }, 100);
   }
   
-  // Auto download
   function autoDownloadReceipt(receiptText, txId) {
     try {
       const blob = new Blob([receiptText], { type: 'text/plain' });
@@ -587,7 +574,6 @@ Thank you for choosing JonasiClinincs!
     }
   }
   
-  // Process payment with Supabase sync
   async function processPayment() {
     if (!currentUser) { 
       alert("Please login first."); 
@@ -651,7 +637,6 @@ Thank you for choosing JonasiClinincs!
     document.getElementById('process-payment').disabled = true;
   }
   
-  // Tab switching
   function switchTab(stepId) {
     const panels = document.querySelectorAll('.panel');
     const tabs = document.querySelectorAll('.step-tab');
@@ -670,12 +655,10 @@ Thank you for choosing JonasiClinincs!
     console.log(`Switched to tab: ${stepId}`);
   }
   
-  // Event Listeners
   document.addEventListener('DOMContentLoaded', () => {
     console.log("DOM loaded, setting up event listeners");
     
-    const tabs = document.querySelectorAll('.step-tab');
-    tabs.forEach(tab => {
+    document.querySelectorAll('.step-tab').forEach(tab => {
       tab.addEventListener('click', (e) => {
         const step = tab.dataset.step;
         switchTab(step);
@@ -769,8 +752,7 @@ Thank you for choosing JonasiClinincs!
       });
     }
   
-    const payBtns = document.querySelectorAll('.payment-btn');
-    payBtns.forEach(btn => {
+    document.querySelectorAll('.payment-btn').forEach(btn => {
       btn.addEventListener('click', () => {
         if (!currentUser) { 
           alert("Login required."); 
@@ -783,7 +765,7 @@ Thank you for choosing JonasiClinincs!
           return; 
         }
         
-        payBtns.forEach(b => b.classList.remove('active-method'));
+        document.querySelectorAll('.payment-btn').forEach(b => b.classList.remove('active-method'));
         btn.classList.add('active-method');
         selectedPaymentMethod = btn.dataset.method;
         document.getElementById('selected-method').innerHTML = `✅ Selected: <strong>${selectedPaymentMethod}</strong>`;
@@ -792,62 +774,49 @@ Thank you for choosing JonasiClinincs!
       });
     });
   
-    const processBtn = document.getElementById('process-payment');
-    if (processBtn) {
-      processBtn.addEventListener('click', processPayment);
-    }
+    document.getElementById('process-payment').addEventListener('click', processPayment);
   
-    const manualPrintBtn = document.getElementById('manual-print-receipt');
-    if (manualPrintBtn) {
-      manualPrintBtn.addEventListener('click', () => {
-        const receiptText = document.getElementById('receipt-output').innerText;
-        if (!receiptText || receiptText.includes('Receipt will appear')) {
-          alert("No receipt available. Process a payment first.");
-          return;
-        }
-        autoPrintReceipt(receiptText);
-        document.getElementById('receipt-status').innerHTML = '🖨️ Print requested!';
-      });
-    }
+    document.getElementById('manual-print-receipt').addEventListener('click', () => {
+      const receiptText = document.getElementById('receipt-output').innerText;
+      if (!receiptText || receiptText.includes('Receipt will appear')) {
+        alert("No receipt available. Process a payment first.");
+        return;
+      }
+      autoPrintReceipt(receiptText);
+      document.getElementById('receipt-status').innerHTML = '🖨️ Print requested!';
+    });
     
-    const manualDownloadBtn = document.getElementById('manual-download-receipt');
-    if (manualDownloadBtn) {
-      manualDownloadBtn.addEventListener('click', () => {
-        const receiptText = document.getElementById('receipt-output').innerText;
-        if (!receiptText || receiptText.includes('Receipt will appear')) {
-          alert("No receipt available.");
-          return;
-        }
-        const match = receiptText.match(/Transaction ID\s*:\s*(\S+)/);
-        const txId = match ? match[1] : "receipt";
-        autoDownloadReceipt(receiptText, txId);
-        document.getElementById('receipt-status').innerHTML = '⬇️ Receipt downloaded manually.';
-      });
-    }
+    document.getElementById('manual-download-receipt').addEventListener('click', () => {
+      const receiptText = document.getElementById('receipt-output').innerText;
+      if (!receiptText || receiptText.includes('Receipt will appear')) {
+        alert("No receipt available.");
+        return;
+      }
+      const match = receiptText.match(/Transaction ID\s*:\s*(\S+)/);
+      const txId = match ? match[1] : "receipt";
+      autoDownloadReceipt(receiptText, txId);
+      document.getElementById('receipt-status').innerHTML = '⬇️ Receipt downloaded manually.';
+    });
   
-    const refreshBtn = document.getElementById('refresh-dashboard');
-    if (refreshBtn) {
-      refreshBtn.addEventListener('click', async () => {
-        if (!currentUser) { 
-          alert("Please login as admin/officer to see stats."); 
-          return; 
-        }
-        
-        const summary = await fetchRevenueSummary();
-        const supabaseStatus = supabaseClient ? "✅ Live Supabase" : "⚠️ Local fallback";
-        document.getElementById('dashboard-output').innerHTML = `
-          <strong>📊 Revenue Summary</strong><br>
-          Total Collected: $${summary.total.toFixed(2)}<br>
-          Transactions count: ${summary.count}<br>
-          Breakdown by method:<br>
-          • EcoCash: ${summary.breakdown.EcoCash || 0}<br>
-          • Card: ${summary.breakdown.Card || 0}<br>
-          • Cash: ${summary.breakdown.Cash || 0}<br>
-          <small>${supabaseStatus}</small>
-        `;
-        console.log(`Dashboard refreshed: ${summary.count} transactions, total $${summary.total}`);
-      });
-    }
+    document.getElementById('refresh-dashboard').addEventListener('click', async () => {
+      if (!currentUser) { 
+        alert("Please login as admin/officer to see stats."); 
+        return; 
+      }
+      
+      const summary = await fetchRevenueSummary();
+      const supabaseStatus = supabaseClient ? "✅ Live Supabase" : "⚠️ Local fallback";
+      document.getElementById('dashboard-output').innerHTML = `
+        <strong>📊 Revenue Summary</strong><br>
+        Total Collected: $${summary.total.toFixed(2)}<br>
+        Transactions count: ${summary.count}<br>
+        Breakdown by method:<br>
+        • EcoCash: ${summary.breakdown.EcoCash || 0}<br>
+        • Card: ${summary.breakdown.Card || 0}<br>
+        • Cash: ${summary.breakdown.Cash || 0}<br>
+        <small>${supabaseStatus}</small>
+      `;
+    });
     
     updateAuthUI(null);
   });
