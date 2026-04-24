@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
-  <title>TariroClinincs | Mobile Collection System</title>
+  <title>JonasiClininc | Mobile Collection System</title>
   <style>
     * {
       margin: 0;
@@ -222,7 +222,7 @@
 <body>
 <div class="app-container">
   <div class="brand-header">
-    <h1>🏥 TariroClinincs</h1>
+    <h1>🏥 JonasiClininc</h1>
     <p>Mobile Collection & Easy Billing</p>
   </div>
 
@@ -240,7 +240,7 @@
       <h2>🔒 Officer / Admin Login</h2>
       <form id="login-form">
         <label>Email</label>
-        <input id="login-email" type="email" required placeholder="admin@tariroclinincs.com" />
+        <input id="login-email" type="email" required placeholder="admin@jonasiclinincs.com" />
         <label>Password</label>
         <input id="login-password" type="password" required placeholder="Enter password" />
         <button type="submit" id="login-btn">Login →</button>
@@ -314,7 +314,7 @@
   </div>
 
   <footer>
-    <p>TariroClinincs Mobile Collection — Secure step-by-step workflow | Receipt auto‑print & auto‑download</p>
+    <p>JonasiClinincs Mobile Collection — Secure step-by-step workflow | Receipt auto‑print & auto‑download</p>
   </footer>
 </div>
 
@@ -435,10 +435,10 @@
     
     if (!supabaseClient) {
       console.warn("No Supabase client - saving to localStorage fallback");
-      let transactions = JSON.parse(localStorage.getItem('tariro_transactions') || '[]');
+      let transactions = JSON.parse(localStorage.getItem('jonasi_transactions') || '[]');
       const newTx = { ...transaction, id: Date.now(), created_at: new Date().toISOString() };
       transactions.push(newTx);
-      localStorage.setItem('tariro_transactions', JSON.stringify(transactions));
+      localStorage.setItem('jonasi_transactions', JSON.stringify(transactions));
       console.log(`✅ Saved to localStorage fallback (total: ${transactions.length} transactions)`);
       return { success: true, data: newTx, fallback: true };
     }
@@ -470,10 +470,10 @@
     } catch (err) {
       console.error("❌ Supabase insert exception:", err.message);
       // Fallback to localStorage
-      let transactions = JSON.parse(localStorage.getItem('tariro_transactions') || '[]');
+      let transactions = JSON.parse(localStorage.getItem('jonasi_transactions') || '[]');
       const newTx = { ...transaction, id: Date.now(), created_at: new Date().toISOString() };
       transactions.push(newTx);
-      localStorage.setItem('tariro_transactions', JSON.stringify(transactions));
+      localStorage.setItem('jonasi_transactions', JSON.stringify(transactions));
       console.log(`✅ Saved to localStorage fallback (total: ${transactions.length} transactions)`);
       return { success: true, data: newTx, fallback: true };
     }
@@ -482,7 +482,7 @@
   // Fetch transactions from Supabase (or fallback)
   async function fetchTransactionsFromSupabase() {
     if (!supabaseClient) {
-      let transactions = JSON.parse(localStorage.getItem('tariro_transactions') || '[]');
+      let transactions = JSON.parse(localStorage.getItem('jonasi_transactions') || '[]');
       return transactions.filter(t => t.status === 'completed');
     }
     try {
@@ -495,7 +495,7 @@
       return data || [];
     } catch (err) {
       console.error("Error fetching from Supabase:", err.message);
-      let transactions = JSON.parse(localStorage.getItem('tariro_transactions') || '[]');
+      let transactions = JSON.parse(localStorage.getItem('jonasi_transactions') || '[]');
       return transactions.filter(t => t.status === 'completed');
     }
   }
@@ -516,7 +516,7 @@
     const date = new Date(tx.timestamp).toLocaleString();
     return `
 ====================================
-     🏥 TARIRO CLINICS
+     🏥 Jonasi CLINICS
      Mobile Collection Receipt
 ====================================
 Transaction ID : ${tx.transaction_id}
@@ -529,7 +529,7 @@ Officer        : ${tx.officer_email}
 Date & Time    : ${date}
 Status         : COMPLETED
 ====================================
-Thank you for choosing TariroClinincs!
+Thank you for choosing JonasiClinincs!
           Keep this receipt.
 ====================================
 `;
@@ -544,7 +544,7 @@ Thank you for choosing TariroClinincs!
         return false;
       }
       printWindow.document.write(`
-        <html><head><title>TariroClinincs Receipt</title>
+        <html><head><title>JonasiClinincs Receipt</title>
         <style>body { font-family: monospace; padding: 2rem; text-align: center; white-space: pre-wrap; } pre { font-size: 0.9rem; background: #f9f9f9; padding: 1rem; }</style>
         </head><body><pre>${receiptText}</pre><script>window.onload=()=>{ window.print(); setTimeout(()=>window.close(), 1500); }<\/script></body></html>
       `);
