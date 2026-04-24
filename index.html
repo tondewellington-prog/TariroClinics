@@ -3,7 +3,22 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
   <title>JonasiClininc | Mobile Collection System</title>
+  
+  <!-- Force HTTPS - This redirects HTTP to HTTPS -->
+  <script>
+    (function() {
+      // Force HTTPS except on localhost/testing environments
+      if (location.protocol !== 'https:' && 
+          location.hostname !== 'localhost' && 
+          location.hostname !== '127.0.0.1' &&
+          !location.hostname.includes('.ngrok.io')) {
+        location.href = 'https://' + location.hostname + location.pathname + location.search;
+      }
+    })();
+  </script>
+  
   <style>
     * {
       margin: 0;
@@ -535,7 +550,7 @@ Thank you for choosing JonasiClinincs!
 `;
   }
   
-  // Auto print - FIXED: no freezing, uses setTimeout
+  // Auto print - no freezing, uses setTimeout
   function autoPrintReceipt(receiptText) {
     setTimeout(() => {
       const printWindow = window.open('', '_blank', 'width=500,height=600');
@@ -572,7 +587,7 @@ Thank you for choosing JonasiClinincs!
     }
   }
   
-  // Process payment with Supabase sync - FIXED: no freezing, better UX
+  // Process payment with Supabase sync
   async function processPayment() {
     if (!currentUser) { 
       alert("Please login first."); 
@@ -620,19 +635,16 @@ Thank you for choosing JonasiClinincs!
     const receiptText = buildReceipt(transaction);
     document.getElementById('receipt-output').innerText = receiptText;
     
-    // Auto print and download (non-blocking)
     autoPrintReceipt(receiptText);
     autoDownloadReceipt(receiptText, transaction.transaction_id);
     
     const syncMsg = result.fallback ? "(Saved locally - check Supabase connection)" : "(Synced to Supabase)";
     document.getElementById('receipt-status').innerHTML = `✅ Receipt printed & downloaded! ${syncMsg}`;
     
-    // Use setTimeout for alert to not block UI
     setTimeout(() => {
       alert(`✅ Payment of $${currentBill.amount.toFixed(2)} via ${selectedPaymentMethod} completed.\nReceipt printed & downloaded.`);
     }, 50);
     
-    // Reset payment method UI
     selectedPaymentMethod = null;
     document.getElementById('selected-method').innerText = 'No payment method selected.';
     document.querySelectorAll('.payment-btn').forEach(btn => btn.classList.remove('active-method'));
@@ -662,7 +674,6 @@ Thank you for choosing JonasiClinincs!
   document.addEventListener('DOMContentLoaded', () => {
     console.log("DOM loaded, setting up event listeners");
     
-    // Tab navigation
     const tabs = document.querySelectorAll('.step-tab');
     tabs.forEach(tab => {
       tab.addEventListener('click', (e) => {
@@ -671,7 +682,6 @@ Thank you for choosing JonasiClinincs!
       });
     });
   
-    // Login form
     const loginForm = document.getElementById('login-form');
     const loginBtn = document.getElementById('login-btn');
     
@@ -706,7 +716,6 @@ Thank you for choosing JonasiClinincs!
       });
     }
   
-    // Logout button
     const logoutBtn = document.getElementById('logout-btn');
     if (logoutBtn) {
       logoutBtn.addEventListener('click', () => {
@@ -721,7 +730,6 @@ Thank you for choosing JonasiClinincs!
       });
     }
   
-    // Customer form
     const customerForm = document.getElementById('customer-form');
     if (customerForm) {
       customerForm.addEventListener('submit', (e) => {
@@ -761,7 +769,6 @@ Thank you for choosing JonasiClinincs!
       });
     }
   
-    // Payment method selection
     const payBtns = document.querySelectorAll('.payment-btn');
     payBtns.forEach(btn => {
       btn.addEventListener('click', () => {
@@ -785,13 +792,11 @@ Thank you for choosing JonasiClinincs!
       });
     });
   
-    // Process payment button
     const processBtn = document.getElementById('process-payment');
     if (processBtn) {
       processBtn.addEventListener('click', processPayment);
     }
   
-    // Manual print receipt
     const manualPrintBtn = document.getElementById('manual-print-receipt');
     if (manualPrintBtn) {
       manualPrintBtn.addEventListener('click', () => {
@@ -805,7 +810,6 @@ Thank you for choosing JonasiClinincs!
       });
     }
     
-    // Manual download receipt
     const manualDownloadBtn = document.getElementById('manual-download-receipt');
     if (manualDownloadBtn) {
       manualDownloadBtn.addEventListener('click', () => {
@@ -821,7 +825,6 @@ Thank you for choosing JonasiClinincs!
       });
     }
   
-    // Admin dashboard refresh
     const refreshBtn = document.getElementById('refresh-dashboard');
     if (refreshBtn) {
       refreshBtn.addEventListener('click', async () => {
@@ -846,7 +849,6 @@ Thank you for choosing JonasiClinincs!
       });
     }
     
-    // Initialize auth status
     updateAuthUI(null);
   });
 </script>
